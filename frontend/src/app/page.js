@@ -46,7 +46,7 @@ export default function Home() {
               className="text-white font-bold font-mono text-xl"
             />
           </div>
-          <img src="/logo.png" alt="logo" className="h-[150px] md:h-[200px] w-auto" />
+          <img src="/logo.png" alt="logo" className="h-[100px] sm:h-[150px] md:h-[200px] w-auto" />
           {/*<hr className="bg-white/20 hidden sm:block sm:h-[400px] sm:w-[1px] sm:mr-7 mx-3" />*/}
           <div className="flex flex-col items-center justify-center gap-4 w-[350px]">
             <form className="flex flex-col gap-4 items-center justify-center w-full">
