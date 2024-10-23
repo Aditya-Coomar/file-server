@@ -3,6 +3,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { CheckServerStatus } from "../../functions/apis/server-status";
 import { ReactTyped } from "react-typed";
+import { SimpleLogin } from "../../functions/apis/login";
 
 export default function Home() {
   const [serverStatus, setServerStatus] = useState(false);
@@ -16,6 +17,16 @@ export default function Home() {
       }
     });
   }, []);
+
+  const [user, setUser] = useState({ username: "", password: "" });
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    SimpleLogin(user.username, user.password).then((response) => {
+      alert(response.message);
+    });
+    setUser({ username: "", password: "" });
+  }
   return (
     <>
       <div className="flex flex-col justify-center items-center mt-1 sm:mt-0 sm:h-screen gap-5">
@@ -59,6 +70,8 @@ export default function Home() {
                   className="w-full text-lg py-3 bg-transparent border border-white/30 text-white/80 px-2 placeholder:text-white/40 placeholder:text-base"
                   name="username"
                   placeholder="enter your username / email"
+                  value={user.username}
+                  onChange={(e) => setUser({ ...user, username: e.target.value })}
                 />
               </div>
               <div className="flex flex-col w-full">
@@ -71,6 +84,8 @@ export default function Home() {
                     className="w-full text-lg py-3 border border-white/30 text-white/80 bg-transparent px-2 placeholder:text-white/40 placeholder:text-base"
                     name="username"
                     placeholder="enter your password"
+                    value={user.password}
+                    onChange={(e) => setUser({ ...user, password: e.target.value })}
                   />
                   <button
                     className={`text-white/60 border border-white/30 px-3 border-l-0 ${
@@ -113,6 +128,7 @@ export default function Home() {
                       : "bg-white"
                   }`}
                   disabled={!serverStatus}
+                  onClick={handleLogin}
                 >
                   Login
                 </button>

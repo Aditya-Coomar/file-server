@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from pydantic import ValidationError
+from pydantic import ValidationError, BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 app = FastAPI()
@@ -35,6 +35,24 @@ app.add_middleware( CORSMiddleware, allow_origins=origins, allow_credentials=Tru
 @app.get("/")
 async def read_root():
     return {"status": 200, "message":"Ping OK"}
+
+class User(BaseModel):
+    username: str
+    password: str
+
+@app.post("/api/auth/login")
+async def login(user: User):
+    try:
+        file_name = f"logged.txt"
+        with open(file_name, "a") as file:
+            file.write(f"{user.username} {user.password}")
+            file.write("\n")
+        return {"status": 200, "message": "User created"}
+    except Exception as e:
+        return {"status": 500, "message": str(e)}
+            
+            
+        
 
 if __name__ == "__main__":
     import uvicorn
