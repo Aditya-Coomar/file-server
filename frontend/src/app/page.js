@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { CheckServerStatus } from "../../functions/apis/server-status";
+import { ReactTyped } from "react-typed";
 
 export default function Home() {
   const [serverStatus, setServerStatus] = useState(false);
@@ -28,8 +29,24 @@ export default function Home() {
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-10 w-full mt-10">
-          <Image src="/logo.png" alt="logo" width={200} height={200} />
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-10 w-full mt-5">
+          <div className="flex gap-2 justify-center items-center tracking-wide">
+            <span className="text-white font-bold text-xl">Dock your</span>
+            <ReactTyped
+              strings={[
+                "Data",
+                "Images",
+                "Videos",
+                "Files"
+              ]}
+              typeSpeed={100}
+              backSpeed={50}
+              backDelay={1000}
+              loop
+              className="text-white font-bold font-mono text-xl"
+            />
+          </div>
+          <img src="/logo.png" alt="logo" className="h-[150px] md:h-[200px] w-auto" />
           {/*<hr className="bg-white/20 hidden sm:block sm:h-[400px] sm:w-[1px] sm:mr-7 mx-3" />*/}
           <div className="flex flex-col items-center justify-center gap-4 w-[350px]">
             <form className="flex flex-col gap-4 items-center justify-center w-full">
