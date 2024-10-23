@@ -1,101 +1,138 @@
+"use client";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { CheckServerStatus } from "../../functions/apis/server-status";
 
 export default function Home() {
+  const [serverStatus, setServerStatus] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  useEffect(() => {
+    CheckServerStatus().then((response) => {
+      if (response.status === 200) {
+        setServerStatus(true);
+      } else {
+        setServerStatus(false);
+      }
+    });
+  }, []);
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <>
+      <div className="flex flex-col justify-center items-center mt-1 sm:mt-0 sm:h-screen gap-5">
+        {serverStatus ? (
+          <div className="bg-green-950/30 text-green-700 font-mono border border-green-900 py-4 px-7 text-center mx-1">
+            Successfully connected to the server
+          </div>
+        ) : (
+          <div className="bg-red-950/30 text-red-700 border border-red-900 font-mono py-4 px-7 text-center mx-1">
+            You are not connected to the server. Please check your connection.
+          </div>
+        )}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-10 w-full mt-10">
+          <Image src="/logo.png" alt="logo" width={200} height={200} />
+          {/*<hr className="bg-white/20 hidden sm:block sm:h-[400px] sm:w-[1px] sm:mr-7 mx-3" />*/}
+          <div className="flex flex-col items-center justify-center gap-4 w-[350px]">
+            <form className="flex flex-col gap-4 items-center justify-center w-full">
+              <div className="flex flex-col w-full">
+                <div className="text-white/60 text-base font-semibold bg-[#0a0a0a] w-fit px-1 -mb-3 ml-2 z-10">
+                  Username
+                </div>
+                <input
+                  type="text"
+                  className="w-full text-lg py-3 bg-transparent border border-white/30 text-white/80 px-2 placeholder:text-white/40 placeholder:text-base"
+                  name="username"
+                  placeholder="enter your username / email"
+                />
+              </div>
+              <div className="flex flex-col w-full">
+                <div className="text-white/60 text-base font-semibold bg-[#0a0a0a] w-fit px-1 -mb-3 ml-2 z-10">
+                  Password
+                </div>
+                <div className="flex flex-row justify-between ">
+                  <input
+                    type={passwordVisible ? "text" : "password"}
+                    className="w-full text-lg py-3 border border-white/30 text-white/80 bg-transparent px-2 placeholder:text-white/40 placeholder:text-base"
+                    name="username"
+                    placeholder="enter your password"
+                  />
+                  <button
+                    className={`text-white/60 border border-white/30 px-3 border-l-0 ${
+                      passwordVisible
+                        ? "bg-white/70 border-black"
+                        : "bg-transparent"
+                    }`}
+                    type="button"
+                    onClick={() => setPasswordVisible(!passwordVisible)}
+                  >
+                    {passwordVisible ? (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        height="20px"
+                        viewBox="0 -960 960 960"
+                        width="20px"
+                        fill={passwordVisible ? "#000000" : "#ffffff"}
+                      >
+                        <path d="m637-425-62-62q4-38-23-65.5T487-576l-62-62q13-5 27-7.5t28-2.5q70 0 119 49t49 119q0 14-2.5 28t-8.5 27Zm133 133-52-52q36-28 65.5-61.5T833-480q-49-101-144.5-158.5T480-696q-26 0-51 3t-49 10l-58-58q38-15 77.5-21t80.5-6q143 0 261.5 77.5T912-480q-22 57-58.5 103.5T770-292Zm-2 202L638-220q-38 14-77.5 21t-80.5 7q-143 0-261.5-77.5T48-480q22-57 58-104t84-85L90-769l51-51 678 679-51 51ZM241-617q-35 28-65 61.5T127-480q49 101 144.5 158.5T480-264q26 0 51-3.5t50-9.5l-45-45q-14 5-28 7.5t-28 2.5q-70 0-119-49t-49-119q0-14 3.5-28t6.5-28l-81-81Zm287 89Zm-96 96Z" />
+                      </svg>
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        height="20px"
+                        viewBox="0 -960 960 960"
+                        width="20px"
+                        fill={passwordVisible ? "#000000" : "#ffffff"}
+                      >
+                        <path d="M480-312q70 0 119-49t49-119q0-70-49-119t-119-49q-70 0-119 49t-49 119q0 70 49 119t119 49Zm0-72q-40 0-68-28t-28-68q0-40 28-68t68-28q40 0 68 28t28 68q0 40-28 68t-68 28Zm0 192q-142.6 0-259.8-78.5Q103-349 48-480q55-131 172.2-209.5Q337.4-768 480-768q142.6 0 259.8 78.5Q857-611 912-480q-55 131-172.2 209.5Q622.6-192 480-192Zm0-288Zm0 216q112 0 207-58t146-158q-51-100-146-158t-207-58q-112 0-207 58T127-480q51 100 146 158t207 58Z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+              <div className="w-full">
+                <button
+                  className={`py-3 w-full font-bold tracking-wider text-black ${
+                    !serverStatus
+                      ? "cursor-not-allowed bg-white/80"
+                      : "bg-white"
+                  }`}
+                  disabled={!serverStatus}
+                >
+                  Login
+                </button>
+              </div>
+            </form>
+            <div className="flex flex-nowrap w-full items-center">
+              <hr className="bg-white/10 h-[1px] w-1/2" />
+              <p className="text-white/50 mx-2 font-mono">or</p>
+              <hr className="bg-white/10 h-[1px] w-1/2" />
+            </div>
+            <div className="flex flex-col gap-4 w-full">
+              <button
+                className={`text-white/60 border border-white/30 py-2 w-full font-semibold tracking-wider flex items-center justify-center gap-3 hover:text-black hover:bg-white ${
+                  serverStatus ? "" : "cursor-not-allowed"
+                }`}
+                disabled={!serverStatus}
+              >
+                <span>Continue with</span>
+                <img src={"/google.svg"} className="w-auto h-6" alt="google" />
+              </button>
+              <button
+                className={`text-white/60 border border-white/30 py-2 w-full font-semibold tracking-wider flex items-center justify-center gap-3 hover:text-black hover:bg-white ${
+                  serverStatus ? "" : "cursor-not-allowed"
+                }`}
+                disabled={!serverStatus}
+              >
+                <span>Continue with</span>
+                <img
+                  src={"/github.svg"}
+                  className="w-auto bg-white rounded-full h-6"
+                  alt="google"
+                />
+              </button>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </div>
+    </>
   );
 }
