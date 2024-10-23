@@ -5,7 +5,7 @@ const CheckServerStatus = async () => {
   };
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/", requestOptions);
+    const response = await fetch("https://bursting-shepherd-promoted.ngrok-free.app", requestOptions);
     return response;
   } catch (error) {
     return error;
