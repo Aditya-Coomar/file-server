@@ -13,7 +13,7 @@ const geistMono = localFont({
 });
 
 export const metadata = {
-  title: "File Server",
+  title: "Data Dock",
   description: "",
 };
 
