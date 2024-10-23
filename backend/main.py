@@ -27,15 +27,15 @@ async def validation_exception_handler(request, exc):
         status_code=400,
         content={"message": "Validation error", "details": exc.errors()},
     )
-
-origins = [ "http://localhost", "http://localhost:3000", "http://localhost:8000", "http://127.0.0.1" ]
+    
+origins = [ "http://localhost", "http://localhost:3000", "http://localhost:8000", "http://localhost:8080", "http://localhost:8081" ]
 
 app.add_middleware( CORSMiddleware, allow_origins=origins, allow_credentials=True, allow_methods=["*"], allow_headers=["*"], )
 
 @app.get("/")
 async def read_root():
-    return {"Hello": "World"}
+    return {"status": 200, "message":"Ping OK"}
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, port=8000)
