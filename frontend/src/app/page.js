@@ -20,11 +20,11 @@ export default function Home() {
     <>
       <div className="flex flex-col justify-center items-center mt-1 sm:mt-0 sm:h-screen gap-5">
         {serverStatus ? (
-          <div className="bg-green-950/30 text-green-700 font-mono border border-green-900 py-4 px-7 text-center mx-1">
+          <div className="bg-green-950/30 text-green-700 text-sm md:text-base font-mono border border-green-900 py-4 px-7 text-center mx-1">
             Successfully connected to the server
           </div>
         ) : (
-          <div className="bg-red-950/30 text-red-700 border border-red-900 font-mono py-4 px-7 text-center mx-1">
+          <div className="bg-red-950/30 text-red-700 text-sm md:text-base border border-red-900 font-mono py-4 px-7 text-center mx-1">
             You are not connected to the server. Please check your connection.
           </div>
         )}
