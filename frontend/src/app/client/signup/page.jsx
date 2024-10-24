@@ -1,86 +1,66 @@
 "use client";
-import Image from "next/image";
-import { useEffect, useState } from "react";
-import { CheckServerStatus } from "../../functions/apis/server-status";
-import { ReactTyped } from "react-typed";
-import { SimpleLogin } from "../../functions/apis/login";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function Home() {
+const SignupPage = () => {
   const router = useRouter();
-  const [serverStatus, setServerStatus] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
-  useEffect(() => {
-    CheckServerStatus().then((response) => {
-      if (response.status === 200) {
-        setServerStatus(true);
-      } else {
-        setServerStatus(false);
-      }
-    });
-  }, []);
-
-  const [user, setUser] = useState({ username: "", password: "" });
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-    SimpleLogin(user.username, user.password).then((response) => {
-      alert(response.message);
-    });
-    setUser({ username: "", password: "" });
-  };
+  const signupFields = [
+    {
+      label: "Email",
+      type: "email",
+      placeholder: "enter your email",
+      name: "email",
+      autoComplete: "email",
+    },
+    {
+      label: "Full Name",
+      type: "text",
+      placeholder: "enter your full name",
+      name: "fullName",
+      autoComplete: "name",
+    },
+    {
+      label: "Username",
+      type: "text",
+      placeholder: "enter your username",
+      name: "username",
+      autoComplete: "username",
+    },
+  ];
   return (
     <>
-      <div className="flex flex-col justify-center items-center mt-1 sm:mt-0 sm:h-screen gap-5 px-1">
-        {serverStatus ? (
-          <div className="bg-green-950/30 text-green-700 w-full sm:w-auto text-sm md:text-base font-mono border border-green-900 py-4 px-4 text-center">
-            The server responded successfully.
-          </div>
-        ) : (
-          <div className="bg-red-950/30 text-red-700 w-full sm:w-auto text-sm md:text-base border border-red-900 font-mono py-4 px-4 text-center">
-            Connection failed. The server is offline or troubleshoot your
-            connection.
-          </div>
-        )}
-
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-10 w-full mt-5">
-          <div className="flex flex-col justify-center items-center gap-10">
+      <div className="flex flex-col items-center justify-center h-screen">
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-7 md:gap-10 lg:gap-14 w-full mt-2">
+          <div className="flex flex-col justify-center items-center gap-8">
             <div className="flex gap-2 justify-center items-center tracking-wide">
-              <span className="text-white font-bold text-xl">Dock your</span>
-              <ReactTyped
-                strings={["Data", "Images", "Videos", "Files"]}
-                typeSpeed={100}
-                backSpeed={50}
-                backDelay={1000}
-                loop
-                className="text-white font-bold font-mono text-xl"
-              />
+              <span className="text-white font-bold text-xl md:text-2xl">
+                Sign up to Data Dock
+              </span>
             </div>
             <img
               src="/logo.png"
               alt="logo"
-              className="h-[100px] sm:h-[150px] md:h-[200px] w-auto"
+              className="h-[90px] sm:h-[120px] md:h-[200px] lg:h-[300px] w-auto"
             />
           </div>
-
           {/*<hr className="bg-white/20 hidden sm:block sm:h-[400px] sm:w-[1px] sm:mr-7 mx-3" />*/}
           <div className="flex flex-col items-center justify-center gap-4 w-[350px]">
-            <form className="flex flex-col gap-4 items-center justify-center w-full">
-              <div className="flex flex-col w-full">
-                <div className="text-white/60 text-base font-semibold bg-[#0a0a0a] w-fit px-1 -mb-3 ml-2 z-10">
-                  Username
+            <form className="flex flex-col gap-3 items-center justify-center w-full">
+              {signupFields.map((field, index) => (
+                <div key={index} className="flex flex-col w-full">
+                  <div className="text-white/60 text-base font-semibold bg-[#0a0a0a] w-fit px-1 -mb-3 ml-2 z-10">
+                    {field.label}
+                  </div>
+                  <input
+                    type={field.type}
+                    className="w-full text-lg py-3 bg-transparent border border-white/30 text-white/80 px-2 placeholder:text-white/40 placeholder:text-base"
+                    name={field.name}
+                    placeholder={field.placeholder}
+                    autoComplete={field.autoComplete}
+                  />
                 </div>
-                <input
-                  type="text"
-                  className="w-full text-lg py-3 bg-transparent border border-white/30 text-white/80 px-2 placeholder:text-white/40 placeholder:text-base"
-                  name="username"
-                  placeholder="enter your username / email"
-                  value={user.username}
-                  onChange={(e) =>
-                    setUser({ ...user, username: e.target.value })
-                  }
-                />
-              </div>
+              ))}
               <div className="flex flex-col w-full">
                 <div className="text-white/60 text-base font-semibold bg-[#0a0a0a] w-fit px-1 -mb-3 ml-2 z-10">
                   Password
@@ -91,10 +71,6 @@ export default function Home() {
                     className="w-full text-lg py-3 border border-white/30 text-white/80 bg-transparent px-2 placeholder:text-white/40 placeholder:text-base"
                     name="username"
                     placeholder="enter your password"
-                    value={user.password}
-                    onChange={(e) =>
-                      setUser({ ...user, password: e.target.value })
-                    }
                   />
                   <button
                     className={`text-white/60 border border-white/30 px-3 border-l-0 ${
@@ -129,17 +105,23 @@ export default function Home() {
                   </button>
                 </div>
               </div>
+              <div className="flex flex-col w-full">
+                <div className="text-white/60 text-base font-semibold bg-[#0a0a0a] w-fit px-1 -mb-3 ml-2 z-10">
+                  Confirm Password
+                </div>
+                <input
+                  type="password"
+                  className="w-full text-lg py-3 bg-transparent border border-white/30 text-white/80 px-2 placeholder:text-white/40 placeholder:text-base"
+                  name="confirmPassword"
+                  placeholder="confirm your password"
+                />
+              </div>
               <div className="w-full">
                 <button
-                  className={`py-3 w-full font-bold tracking-wider text-black ${
-                    !serverStatus
-                      ? "cursor-not-allowed bg-white/80"
-                      : "bg-white"
-                  }`}
-                  disabled={!serverStatus}
-                  onClick={handleLogin}
+                  type="submit"
+                  className={`py-3 w-full font-bold tracking-wider text-black ${"bg-white"}`}
                 >
-                  Login
+                  Sign up
                 </button>
               </div>
             </form>
@@ -150,21 +132,15 @@ export default function Home() {
             </div>
             <div className="flex flex-col gap-4 w-full">
               <button
-                className={`text-white/60 border border-white/30 py-2 w-full font-semibold tracking-wider flex items-center justify-center gap-3 hover:text-black hover:bg-white ${
-                  serverStatus ? "" : "cursor-not-allowed"
-                }`}
-                disabled={!serverStatus}
+                className={`text-white/60 border border-white/30 py-2 w-full font-semibold tracking-wider flex items-center justify-center gap-3 hover:text-black hover:bg-white ${"cursor-not-allowed"}`}
               >
-                <span>Continue with</span>
+                <span>Sign up with</span>
                 <img src={"/google.svg"} className="w-auto h-6" alt="google" />
               </button>
               <button
-                className={`text-white/60 border border-white/30 py-2 w-full font-semibold tracking-wider flex items-center justify-center gap-3 hover:text-black hover:bg-white ${
-                  serverStatus ? "" : "cursor-not-allowed"
-                }`}
-                disabled={!serverStatus}
+                className={`text-white/60 border border-white/30 py-2 w-full font-semibold tracking-wider flex items-center justify-center gap-3 hover:text-black hover:bg-white ${"cursor-not-allowed"}`}
               >
-                <span>Continue with</span>
+                <span>Sign up with</span>
                 <img
                   src={"/github.svg"}
                   className="w-auto bg-white rounded-full h-6"
@@ -172,14 +148,11 @@ export default function Home() {
                 />
               </button>
             </div>
-            <button
-              onClick={() => router.push("/client/signup")}
-              disabled={!serverStatus}
-            >
+            <button onClick={() => router.push("/")}>
               <p className="text-white/50 text-sm tracking-wide">
-                Don't have an account?{" "}
+                Already have an account?{" "}
                 <span className="text-white hover:text-white/80 cursor-pointer font-semibold">
-                  Sign up
+                  Login
                 </span>
               </p>
             </button>
@@ -188,4 +161,6 @@ export default function Home() {
       </div>
     </>
   );
-}
+};
+
+export default SignupPage;
