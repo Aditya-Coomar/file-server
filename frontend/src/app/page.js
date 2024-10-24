@@ -31,11 +31,11 @@ export default function Home() {
     <>
       <div className="flex flex-col justify-center items-center mt-1 sm:mt-0 sm:h-screen gap-5 px-1">
         {serverStatus ? (
-          <div className="bg-green-950/30 text-green-700 w-full sm:w-auto text-sm md:text-base font-mono border border-green-900 py-4 px-7 text-center">
+          <div className="bg-green-950/30 text-green-700 w-full sm:w-auto text-sm md:text-base font-mono border border-green-900 py-4 px-4 text-center">
             The server responded successfully.
           </div>
         ) : (
-          <div className="bg-red-950/30 text-red-700 w-full sm:w-auto text-sm md:text-base border border-red-900 font-mono py-4 px-7 text-center">
+          <div className="bg-red-950/30 text-red-700 w-full sm:w-auto text-sm md:text-base border border-red-900 font-mono py-4 px-4 text-center">
             Connection failed. The server is offline or troubleshoot your
             connection.
           </div>
