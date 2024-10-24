@@ -26,38 +26,41 @@ export default function Home() {
       alert(response.message);
     });
     setUser({ username: "", password: "" });
-  }
+  };
   return (
     <>
-      <div className="flex flex-col justify-center items-center mt-1 sm:mt-0 sm:h-screen gap-5">
+      <div className="flex flex-col justify-center items-center mt-1 sm:mt-0 sm:h-screen gap-5 px-1">
         {serverStatus ? (
-          <div className="bg-green-950/30 text-green-700 text-sm md:text-base font-mono border border-green-900 py-4 px-7 text-center mx-1">
-            Successfully connected to the server
+          <div className="bg-green-950/30 text-green-700 w-full sm:w-auto text-sm md:text-base font-mono border border-green-900 py-4 px-7 text-center">
+            The server responded successfully.
           </div>
         ) : (
-          <div className="bg-red-950/30 text-red-700 text-sm md:text-base border border-red-900 font-mono py-4 px-7 text-center mx-1">
-            You are not connected to the server. Please check your connection.
+          <div className="bg-red-950/30 text-red-700 w-full sm:w-auto text-sm md:text-base border border-red-900 font-mono py-4 px-7 text-center">
+            Connection failed. The server is offline or troubleshoot your
+            connection.
           </div>
         )}
 
         <div className="flex flex-col sm:flex-row justify-center items-center gap-10 w-full mt-5">
-          <div className="flex gap-2 justify-center items-center tracking-wide">
-            <span className="text-white font-bold text-xl">Dock your</span>
-            <ReactTyped
-              strings={[
-                "Data",
-                "Images",
-                "Videos",
-                "Files"
-              ]}
-              typeSpeed={100}
-              backSpeed={50}
-              backDelay={1000}
-              loop
-              className="text-white font-bold font-mono text-xl"
+          <div className="flex flex-col justify-center items-center gap-10">
+            <div className="flex gap-2 justify-center items-center tracking-wide">
+              <span className="text-white font-bold text-xl">Dock your</span>
+              <ReactTyped
+                strings={["Data", "Images", "Videos", "Files"]}
+                typeSpeed={100}
+                backSpeed={50}
+                backDelay={1000}
+                loop
+                className="text-white font-bold font-mono text-xl"
+              />
+            </div>
+            <img
+              src="/logo.png"
+              alt="logo"
+              className="h-[100px] sm:h-[150px] md:h-[200px] w-auto"
             />
           </div>
-          <img src="/logo.png" alt="logo" className="h-[100px] sm:h-[150px] md:h-[200px] w-auto" />
+
           {/*<hr className="bg-white/20 hidden sm:block sm:h-[400px] sm:w-[1px] sm:mr-7 mx-3" />*/}
           <div className="flex flex-col items-center justify-center gap-4 w-[350px]">
             <form className="flex flex-col gap-4 items-center justify-center w-full">
@@ -71,7 +74,9 @@ export default function Home() {
                   name="username"
                   placeholder="enter your username / email"
                   value={user.username}
-                  onChange={(e) => setUser({ ...user, username: e.target.value })}
+                  onChange={(e) =>
+                    setUser({ ...user, username: e.target.value })
+                  }
                 />
               </div>
               <div className="flex flex-col w-full">
@@ -85,7 +90,9 @@ export default function Home() {
                     name="username"
                     placeholder="enter your password"
                     value={user.password}
-                    onChange={(e) => setUser({ ...user, password: e.target.value })}
+                    onChange={(e) =>
+                      setUser({ ...user, password: e.target.value })
+                    }
                   />
                   <button
                     className={`text-white/60 border border-white/30 px-3 border-l-0 ${
