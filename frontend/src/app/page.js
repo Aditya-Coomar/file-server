@@ -155,21 +155,8 @@ export default function Home() {
                 }`}
                 disabled={!serverStatus}
               >
-                <span>Continue with</span>
-                <img src={"/google.svg"} className="w-auto h-6" alt="google" />
-              </button>
-              <button
-                className={`text-white/60 border border-white/30 py-2 w-full font-semibold tracking-wider flex items-center justify-center gap-3 hover:text-black hover:bg-white ${
-                  serverStatus ? "" : "cursor-not-allowed"
-                }`}
-                disabled={!serverStatus}
-              >
-                <span>Continue with</span>
-                <img
-                  src={"/github.svg"}
-                  className="w-auto bg-white rounded-full h-6"
-                  alt="google"
-                />
+                <span>Continue with Email</span>
+                {/*<img src={"/icons/mail/white.svg"} className="w-auto h-5" alt="email" />*/}
               </button>
             </div>
             <button

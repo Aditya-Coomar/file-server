@@ -116,7 +116,7 @@ const SignupPage = () => {
                   placeholder="confirm your password"
                 />
               </div>
-              <div className="w-full">
+              <div className="w-full mt-2">
                 <button
                   type="submit"
                   className={`py-3 w-full font-bold tracking-wider text-black ${"bg-white"}`}
@@ -125,29 +125,6 @@ const SignupPage = () => {
                 </button>
               </div>
             </form>
-            <div className="flex flex-nowrap w-full items-center">
-              <hr className="bg-white/10 h-[1px] w-1/2" />
-              <p className="text-white/50 mx-2 font-mono">or</p>
-              <hr className="bg-white/10 h-[1px] w-1/2" />
-            </div>
-            <div className="flex flex-col gap-4 w-full">
-              <button
-                className={`text-white/60 border border-white/30 py-2 w-full font-semibold tracking-wider flex items-center justify-center gap-3 hover:text-black hover:bg-white ${"cursor-not-allowed"}`}
-              >
-                <span>Sign up with</span>
-                <img src={"/google.svg"} className="w-auto h-6" alt="google" />
-              </button>
-              <button
-                className={`text-white/60 border border-white/30 py-2 w-full font-semibold tracking-wider flex items-center justify-center gap-3 hover:text-black hover:bg-white ${"cursor-not-allowed"}`}
-              >
-                <span>Sign up with</span>
-                <img
-                  src={"/github.svg"}
-                  className="w-auto bg-white rounded-full h-6"
-                  alt="google"
-                />
-              </button>
-            </div>
             <button onClick={() => router.push("/")}>
               <p className="text-white/50 text-sm tracking-wide">
                 Already have an account?{" "}

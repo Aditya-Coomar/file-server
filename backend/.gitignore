@@ -1,2 +1,5 @@
 # venv files
 venv/
+
+# env files
+.env
