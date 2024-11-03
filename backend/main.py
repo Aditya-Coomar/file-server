@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
@@ -16,6 +16,10 @@ from starlette.requests import Request
 from template import HTMLTemplate
 from storage import FileServerOperations
 from starlette.responses import JSONResponse
+import jwt
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from bson import ObjectId
+from fastapi import HTTPException
 
 load_dotenv()
 app = FastAPI()      # Create a FastAPI instance
@@ -46,6 +50,43 @@ async def validation_exception_handler(request, exc):
 origins = [ "http://localhost", "http://localhost:3000", "http://localhost:8000", "http://localhost:8080", "http://localhost:8081", "https://data-dock.vercel.app/", "https://file-server-anshucoomar04gmailcoms-projects.vercel.app/" ]
 
 app.add_middleware( CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+
+class TokenData(BaseModel):
+    username: str = None
+
+def verify_token(token: str):
+    try:
+        payload = jwt.decode(token, os.getenv("JWT_SECRET"), algorithms=["HS256"])
+        username: str = payload.get("sub")
+        if username is None:
+            return None
+        token_data = TokenData(username=username)
+        return token_data
+    except jwt.PyJWTError:
+        return None
+
+def get_current_active_user(token: str = Depends(OAuth2PasswordBearer(tokenUrl="api/auth/user/profile"))):
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    token_data = verify_token(token)
+    if token_data is None:
+        raise credentials_exception
+    return token_data
+
+def generate_access_token(data: Dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire, "iat": datetime.utcnow(), "iss": "Data Dock", "nbf": datetime.utcnow(), "sub": str(data["sub"])})
+    secret = os.getenv("JWT_SECRET")
+    encoded_jwt = jwt.encode(to_encode, secret, algorithm="HS256", headers={"alg": "HS256", "typ": "JWT"})
+    return encoded_jwt
+
 
 
 @app.get("/")
@@ -89,10 +130,11 @@ async def register(user: registerUserSchema):
             "is_verified": False,
             "user_created_on": datetime.now().strftime("%a %d %B %Y, %H:%M:%S"),
             "last_login": None,
-            "user_directory": {"allocated_space": 2.00, "used_space": 0.00, "root_directory": f"{fso.root_directory}/{user.username}"}
+            "user_directory": {"allocated_space": 2.00, "used_space": 0.00, "root": f"{user.username}"}
         }
         try:
             db_connection.users_collection.insert_one(user_data)
+            
             return JSONResponse(status_code=200, content={"message": "User registered successfully"})
         except Exception as e:
             return JSONResponse(status_code=500, content={"message": str(e)})
@@ -124,7 +166,8 @@ async def login(user: loginUserSchema):
         
         user_data["last_login"] = datetime.now().strftime("%a %d %B %Y, %H:%M:%S")
         db_connection.users_collection.update_one({"_id": user_data["_id"]}, {"$set": user_data})
-        return JSONResponse(status_code=200, content={"message": "User logged in successfully"})
+        jwt_token = generate_access_token({"sub": str(user_data["_id"])}, expires_delta=timedelta(days=1))
+        return JSONResponse(status_code=200, content={"message": "User logged in successfully", "token": jwt_token})
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": str(e)})
 
@@ -219,7 +262,7 @@ async def verify_otp(data: verifyOTPSchema):
         user_data["verification_code_expires"] = datetime.now()
         db_connection.users_collection.update_one({"_id": user_data["_id"]}, {"$set": user_data})
         try:
-            os.makedirs(user_data["user_directory"]["root_directory"])
+            os.makedirs(f"{fso.root_directory}/{user_data['user_directory']['root']}")
         except FileExistsError:
             pass
         return JSONResponse(status_code=200, content={"message": "OTP verified successfully"})
@@ -241,10 +284,67 @@ async def verify_otp(data: verifyOTPSchema):
         user_data["last_login"] = datetime.now().strftime("%a %d %B %Y, %H:%M:%S")
         user_data["verification_code_expires"] = datetime.now()
         db_connection.users_collection.update_one({"_id": user_data["_id"]}, {"$set": user_data})
-        return JSONResponse(status_code=200, content={"message": "User logged in successfully"})
+        jwt_token = generate_access_token({"sub": str(user_data["_id"])}, expires_delta=timedelta(days=1))
+        return JSONResponse(status_code=200, content={"message": "User logged in successfully", "token": jwt_token})
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": str(e)})
 
+
+
+@app.get("/api/auth/user/profile")
+async def get_user_profile(user: TokenData = Depends(get_current_active_user)):
+    try:
+        user_data = db_connection.users_collection.find_one({"_id": ObjectId(user.username)})
+        if not user_data:
+            return JSONResponse(status_code=404, content={"message": "User not found"})
+        response = {
+            "email": user_data["email"],
+            "fullname": user_data["fullname"],
+            "user_directory": user_data["user_directory"]
+        }
+        return JSONResponse(status_code=200, content={"message": response, "status": "success"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": str(e)})
+    
+class getDirectorySchema(BaseModel):
+    directory_path: str
+@app.get("/api/auth/user/get/directory")
+async def get_directory(data: getDirectorySchema, user: TokenData = Depends(get_current_active_user)):
+    try:
+        user_data = db_connection.users_collection.find_one({"_id": ObjectId(user.username)})
+        if not user_data:
+            return JSONResponse(status_code=404, content={"message": "User not found"})
+        if not os.path.exists(f"{fso.root_directory}/{data.directory_path}"):
+            return JSONResponse(status_code=404, content={"message": "Directory not found"})
+        directory_list = []
+        for entry in os.scandir(f"{fso.root_directory}/{data.directory_path}"):
+            directory_list.append({"name": entry.name, "is_file": entry.is_file(), "is_dir": entry.is_dir()})
+        return JSONResponse(status_code=200, content={"message": directory_list})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": str(e)})  
+
+class createDirectorySchema(BaseModel):
+    directory_name: str
+    base_directory_path: str
+
+@app.post("/api/auth/user/create/directory")
+async def create_directory(data: createDirectorySchema, user: TokenData = Depends(get_current_active_user)):
+    try:
+        user_data = db_connection.users_collection.find_one({"_id": ObjectId(user.username)})
+        if not user_data:
+            return JSONResponse(status_code=404, content={"message": "User not found"})
+        if not os.path.exists(f"{data.base_directory_path}/{data.directory_name}"):
+            os.makedirs(f"{fso.root_directory}/{data.base_directory_path}/{data.directory_name}")
+            return JSONResponse(status_code=200, content={"message": "Directory created successfully"})
+        return JSONResponse(status_code=400, content={"message": "Directory already exists"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": str(e)})
+
+
+
+
+
+# Run the FastAPI application
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, port=8000)
