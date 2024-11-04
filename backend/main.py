@@ -114,9 +114,10 @@ class registerUserSchema(BaseModel):
 @app.post("/api/auth/register")
 async def register(user: registerUserSchema):
     try:
-        existing_user = db_connection.users_collection.find_one({"email": user.email}) or db_connection.users_collection.find_one({"username": user.username})
-        if existing_user:
-            return JSONResponse(status_code=400, content={"message": "User already exists with this email or username", "status": "error"})
+        if db_connection.users_collection.find_one({"email": user.email}):
+            return JSONResponse(status_code=400, content={"message": "Account already created with this Email.", "status": "error"})
+        if db_connection.users_collection.find_one({"username": user.username}):
+            return JSONResponse(status_code=400, content={"message": "Username already taken. Try another", "status": "error"})
         hashedPassword = bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt())
         verification_code = random.randint(100000, 999999)
         hashedVerificationCode = bcrypt.hashpw(str(verification_code).encode("utf-8"), bcrypt.gensalt())
