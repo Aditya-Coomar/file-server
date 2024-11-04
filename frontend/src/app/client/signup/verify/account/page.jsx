@@ -2,6 +2,7 @@
 import SignupPageLayout from "@/components/layout/signup";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { SendVerificationEmail } from "../../../../../../functions/apis/signup";
 
 const VerifyAccountPage = () => {
   const router = useRouter();
@@ -14,7 +15,32 @@ const VerifyAccountPage = () => {
   }, []);
   const [submitDisabled, setSubmitDisabled] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const SendVerficationCode = () => {};
+
+  const [showError, setShowError] = useState({ message: "", display: false });
+  const [showSuccess, setShowSuccess] = useState({
+    message: "",
+    display: false,
+  });
+
+  const SendVerficationCode = (e) => {
+    setSubmitting(true);
+    e.preventDefault();
+    SendVerificationEmail(userEmail).then((response) => {
+      if (response.status === "error") {
+        setShowError({ message: response.message, display: true });
+        setSubmitting(false);
+        setTimeout(() => {
+          setShowError({ message: "", display: false });
+        }, 5000);
+      } else if (response.status === "success") {
+        setShowSuccess({ message: response.message, display: true });
+        setSubmitting(false);
+        setTimeout(() => {
+          setShowSuccess({ message: "", display: false });
+        }, 3000);
+      }
+    });
+  };
   return (
     <>
       <SignupPageLayout title="Verify your Dock">
@@ -31,6 +57,7 @@ const VerifyAccountPage = () => {
               type="submit"
               className={`py-3 w-full font-bold tracking-wider text-black bg-white/95`}
               disabled={submitting}
+              onClick={SendVerficationCode}
             >
               {submitting ? (
                 <>
@@ -71,6 +98,16 @@ const VerifyAccountPage = () => {
               )}
             </button>
           </div>
+          {showError.display && (
+            <div className="bg-red-950/30 text-red-700 w-full text-sm md:text-base border border-red-900 font-mono py-3 px-2 text-center">
+              {showError.message}
+            </div>
+          )}
+          {showSuccess.display && (
+            <div className="bg-green-950/30 text-green-700 w-full text-sm md:text-base font-mono border border-green-900 py-4 px-2 text-center">
+              {showSuccess.message}
+            </div>
+          )}
         </div>
       </SignupPageLayout>
     </>
