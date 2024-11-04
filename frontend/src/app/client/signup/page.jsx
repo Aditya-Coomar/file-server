@@ -1,10 +1,18 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { UserSignup } from "../../../../functions/apis/signup";
 
 const SignupPage = () => {
   const router = useRouter();
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [user, setUser] = useState({
+    email: "",
+    fullName: "",
+    username: "",
+    password: "",
+    confirmPassword: "",
+  });
   const signupFields = [
     {
       label: "Email",
@@ -12,6 +20,8 @@ const SignupPage = () => {
       placeholder: "enter your email",
       name: "email",
       autoComplete: "email",
+      onchange: (e) => setUser({ ...user, email: e.target.value }),
+      value: user.email,
     },
     {
       label: "Full Name",
@@ -19,6 +29,8 @@ const SignupPage = () => {
       placeholder: "enter your full name",
       name: "fullName",
       autoComplete: "name",
+      onchange: (e) => setUser({ ...user, fullName: e.target.value }),
+      value: user.fullName,
     },
     {
       label: "Username",
@@ -26,8 +38,41 @@ const SignupPage = () => {
       placeholder: "enter your username",
       name: "username",
       autoComplete: "username",
+      onchange: (e) => setUser({ ...user, username: e.target.value }),
+      value: user.username,
     },
   ];
+
+  const [submitDisabled, setSubmitDisabled] = useState(false);
+  const checkSubmitDisabled = () => {
+    if (user.password !== user.confirmPassword || user.password.length < 8) {
+      setSubmitDisabled(true);
+    } else if (
+      user.email.length === 0 ||
+      user.fullName.length === 0 ||
+      user.username.length === 0
+    ) {
+      setSubmitDisabled(true);
+    } else {
+      setSubmitDisabled(false);
+    }
+  };
+  useEffect(() => {
+    checkSubmitDisabled();
+  }, [user]);
+
+  const [showError, setShowError] = useState({message: "", display: false});
+
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    UserSignup(user.email, user.fullName, user.username, user.password).then(
+      (response) => {
+        if (response.status == "error") {
+          setShowError(true);
+        }
+      }
+    );
+  };
   return (
     <>
       <div className="flex flex-col items-center justify-center h-screen">
@@ -58,6 +103,8 @@ const SignupPage = () => {
                     name={field.name}
                     placeholder={field.placeholder}
                     autoComplete={field.autoComplete}
+                    onChange={field.onchange}
+                    value={field.value}
                   />
                 </div>
               ))}
@@ -71,6 +118,10 @@ const SignupPage = () => {
                     className="w-full text-lg py-3 border border-white/30 text-white/80 bg-transparent px-2 placeholder:text-white/40 placeholder:text-base"
                     name="username"
                     placeholder="enter your password"
+                    value={user.password}
+                    onChange={(e) =>
+                      setUser({ ...user, password: e.target.value })
+                    }
                   />
                   <button
                     className={`text-white/60 border border-white/30 px-3 border-l-0 ${
@@ -105,21 +156,77 @@ const SignupPage = () => {
                   </button>
                 </div>
               </div>
+              {(user.password.length > 0 && user.password.length < 8) &&
+                <div className="flex flex-row items-center w-full">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  height="24px"
+                  viewBox="0 -960 960 960"
+                  width="14px"
+                  fill="#991b1b"
+                >
+                  <path d="M109-120q-11 0-20-5.5T75-140q-5-9-5.5-19.5T75-180l370-640q6-10 15.5-15t19.5-5q10 0 19.5 5t15.5 15l370 640q6 10 5.5 20.5T885-140q-5 9-14 14.5t-20 5.5H109Zm69-80h604L480-720 178-200Zm302-40q17 0 28.5-11.5T520-280q0-17-11.5-28.5T480-320q-17 0-28.5 11.5T440-280q0 17 11.5 28.5T480-240Zm0-120q17 0 28.5-11.5T520-400v-120q0-17-11.5-28.5T480-560q-17 0-28.5 11.5T440-520v120q0 17 11.5 28.5T480-360Zm0-100Z" />
+                </svg>
+                <p className="text-red-800 text-sm ml-2"> Password must be at least 8 characters long</p>
+              </div>}
               <div className="flex flex-col w-full">
                 <div className="text-white/60 text-base font-semibold bg-[#0a0a0a] w-fit px-1 -mb-3 ml-2 z-10">
                   Confirm Password
                 </div>
-                <input
-                  type="password"
-                  className="w-full text-lg py-3 bg-transparent border border-white/30 text-white/80 px-2 placeholder:text-white/40 placeholder:text-base"
-                  name="confirmPassword"
-                  placeholder="confirm your password"
-                />
+                <div className="flex flex-row justify-between ">
+                  <input
+                    type="password"
+                    className={`w-full text-lg py-3 border border-white/30 ${
+                      !(user.confirmPassword.length === 0) && "border-r-0"
+                    } text-white/80 bg-transparent px-2 placeholder:text-white/40 placeholder:text-base`}
+                    name="username"
+                    placeholder="confirm your password"
+                    value={user.confirmPassword}
+                    onChange={(e) =>
+                      setUser({ ...user, confirmPassword: e.target.value })
+                    }
+                  />
+                  <button
+                    className={`text-white/60 border border-white/30 px-3 border-l-0 ${
+                      user.confirmPassword.length === 0 && "hidden"
+                    }`}
+                    type="button"
+                    disabled
+                  >
+                    {user.password === user.confirmPassword ? (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        height="24px"
+                        viewBox="0 -960 960 960"
+                        width="20px"
+                        fill="#75FB4C"
+                      >
+                        <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z" />
+                      </svg>
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        height="24px"
+                        viewBox="0 -960 960 960"
+                        width="20px"
+                        fill="#EA3323"
+                      >
+                        <path d="M480-424 284-228q-11 11-28 11t-28-11q-11-11-11-28t11-28l196-196-196-196q-11-11-11-28t11-28q11-11 28-11t28 11l196 196 196-196q11-11 28-11t28 11q11 11 11 28t-11 28L536-480l196 196q11 11 11 28t-11 28q-11 11-28 11t-28-11L480-424Z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
               <div className="w-full mt-2">
                 <button
                   type="submit"
-                  className={`py-3 w-full font-bold tracking-wider text-black ${"bg-white"}`}
+                  className={`py-3 w-full font-bold tracking-wider text-black ${
+                    submitDisabled
+                      ? "bg-white/70 cursor-not-allowed"
+                      : "bg-white"
+                  }`}
+                  onClick={handleSignup}
+                  disabled={submitDisabled}
                 >
                   Sign up
                 </button>

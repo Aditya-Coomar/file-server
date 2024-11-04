@@ -1,10 +1,12 @@
 import { SERVER_URL } from "../../constants";
 
-const SimpleLogin = async (username, password) => {
+const UserSignup = async (email, fullname, username, password) => {
   const myHeaders = new Headers();
   myHeaders.append("Content-Type", "application/json");
 
   const raw = JSON.stringify({
+    email: email,
+    fullname: fullname,
     username: username,
     password: password,
   });
@@ -18,7 +20,7 @@ const SimpleLogin = async (username, password) => {
 
   try {
     const response = await fetch(
-      `${SERVER_URL}/api/login`,
+      `${SERVER_URL}/api/auth/register`,
       requestOptions
     );
     const result = await response.json();
@@ -28,4 +30,4 @@ const SimpleLogin = async (username, password) => {
   }
 };
 
-export { SimpleLogin };
+export { UserSignup };

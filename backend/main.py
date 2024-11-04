@@ -116,7 +116,7 @@ async def register(user: registerUserSchema):
     try:
         existing_user = db_connection.users_collection.find_one({"email": user.email}) or db_connection.users_collection.find_one({"username": user.username})
         if existing_user:
-            return JSONResponse(status_code=400, content={"message": "User already exists with this email or username"})
+            return JSONResponse(status_code=400, content={"message": "User already exists with this email or username", "status": "error"})
         hashedPassword = bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt())
         verification_code = random.randint(100000, 999999)
         hashedVerificationCode = bcrypt.hashpw(str(verification_code).encode("utf-8"), bcrypt.gensalt())
@@ -135,12 +135,12 @@ async def register(user: registerUserSchema):
         try:
             db_connection.users_collection.insert_one(user_data)
             
-            return JSONResponse(status_code=200, content={"message": "User registered successfully"})
+            return JSONResponse(status_code=200, content={"message": "User registered successfully", "status": "success"})
         except Exception as e:
-            return JSONResponse(status_code=500, content={"message": str(e)})
+            return JSONResponse(status_code=500, content={"message": str(e), "status": "error"})
         
     except Exception as e:
-        return JSONResponse(status_code=500, content={"message": str(e)})
+        return JSONResponse(status_code=500, content={"message": str(e), "status": "error"})
 
 
 # Login User

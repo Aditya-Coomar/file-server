@@ -1,3 +1,5 @@
+import { SERVER_URL } from "../../constants";
+
 const CheckServerStatus = async () => {
   const requestOptions = {
     method: "GET",
@@ -5,7 +7,7 @@ const CheckServerStatus = async () => {
   };
 
   try {
-    const response = await fetch("https://bursting-shepherd-promoted.ngrok-free.app", requestOptions);
+    const response = await fetch(SERVER_URL, requestOptions);
     return response;
   } catch (error) {
     return error;
