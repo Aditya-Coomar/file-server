@@ -191,12 +191,12 @@ conf = ConnectionConfig(
 async def send_otp(data: sendOTPSchema):
     try:
         if not data.email:
-            return JSONResponse(status_code=400, content={"message": "Email is required"})
+            return JSONResponse(status_code=400, content={"message": "Email is required", "status": "error"})
         user_data = db_connection.users_collection.find_one({"email": data.email})
         if not user_data:
-            return JSONResponse(status_code=404, content={"message": "User not found with this email"})
+            return JSONResponse(status_code=404, content={"message": "User not found with this email", "status": "error"})
         if (datetime.now() - user_data["verification_code_expires"]).seconds < 60:
-            return {"status": 400, "message": "Please wait for 60 seconds before sending another OTP"}
+            return JSONResponse(status_code=400, content={"message": "Please wait for 60 seconds before sending another OTP", "status": "error"})
         otp_verification_code = random.randint(100000, 999999)
         otp_email = mail_template.otp_template(otp_verification_code, data.email, "Verify your Account", "Thank you for choosing Data Dock. Use the following OTP to complete the procedure to verification of your account.")
         message = MessageSchema(
@@ -211,9 +211,9 @@ async def send_otp(data: sendOTPSchema):
         db_connection.users_collection.update_one({"_id": user_data["_id"]}, {"$set": user_data})
         fm = FastMail(conf)
         await fm.send_message(message)
-        return JSONResponse(status_code=200, content={"message": "OTP sent successfully"})
+        return JSONResponse(status_code=200, content={"message": "OTP sent successfully", "status": "success"})
     except Exception as e:
-        return JSONResponse(status_code=500, content={"message": str(e)})
+        return JSONResponse(status_code=500, content={"message": str(e), "status": "error"})
     
 @app.post("/api/auth/login/email")
 async def login_email(data: sendOTPSchema):
