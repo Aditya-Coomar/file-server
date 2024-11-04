@@ -61,14 +61,31 @@ const SignupPage = () => {
     checkSubmitDisabled();
   }, [user]);
 
-  const [showError, setShowError] = useState({message: "", display: false});
+  const [showError, setShowError] = useState({ message: "", display: false });
+  const [showSuccess, setShowSuccess] = useState({
+    message: "",
+    display: false,
+  });
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSignup = async (e) => {
+    setSubmitting(true);
     e.preventDefault();
     UserSignup(user.email, user.fullName, user.username, user.password).then(
       (response) => {
         if (response.status == "error") {
-          setShowError(true);
+          setSubmitting(false);
+          setShowError({ message: response.message, display: true });
+          setUser({ ...user, password: "", confirmPassword: "" });
+          setTimeout(() => {
+            setShowError({ message: "", display: false });
+          }, 5000);
+        } else if (response.status == "success") {
+          sessionStorage.setItem("userEmail", user.email);
+          setShowSuccess({ message: response.message, display: true });
+          setTimeout(() => {
+            router.push("/client/signup/verify/account");
+          }, 3000);
         }
       }
     );
@@ -91,11 +108,21 @@ const SignupPage = () => {
           </div>
           {/*<hr className="bg-white/20 hidden sm:block sm:h-[400px] sm:w-[1px] sm:mr-7 mx-3" />*/}
           <div className="flex flex-col items-center justify-center gap-4 w-[350px]">
+            {showError.display && (
+              <div className="bg-red-950/30 text-red-700 w-full text-sm md:text-base border border-red-900 font-mono py-3 px-2 text-center">
+                {showError.message}
+              </div>
+            )}
+            {showSuccess.display && (
+              <div className="bg-green-950/30 text-green-700 w-full text-sm md:text-base font-mono border border-green-900 py-4 px-2 text-center">
+                {showSuccess.message}
+              </div>
+            )}
             <form className="flex flex-col gap-3 items-center justify-center w-full">
               {signupFields.map((field, index) => (
                 <div key={index} className="flex flex-col w-full">
                   <div className="text-white/60 text-base font-semibold bg-[#0a0a0a] w-fit px-1 -mb-3 ml-2 z-10">
-                    {field.label}
+                    {field.label} <span className="text-yellow-500">*</span>
                   </div>
                   <input
                     type={field.type}
@@ -110,7 +137,7 @@ const SignupPage = () => {
               ))}
               <div className="flex flex-col w-full">
                 <div className="text-white/60 text-base font-semibold bg-[#0a0a0a] w-fit px-1 -mb-3 ml-2 z-10">
-                  Password
+                  Password <span className="text-yellow-500">*</span>
                 </div>
                 <div className="flex flex-row justify-between ">
                   <input
@@ -156,22 +183,26 @@ const SignupPage = () => {
                   </button>
                 </div>
               </div>
-              {(user.password.length > 0 && user.password.length < 8) &&
+              {user.password.length > 0 && user.password.length < 8 && (
                 <div className="flex flex-row items-center w-full">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  height="24px"
-                  viewBox="0 -960 960 960"
-                  width="14px"
-                  fill="#991b1b"
-                >
-                  <path d="M109-120q-11 0-20-5.5T75-140q-5-9-5.5-19.5T75-180l370-640q6-10 15.5-15t19.5-5q10 0 19.5 5t15.5 15l370 640q6 10 5.5 20.5T885-140q-5 9-14 14.5t-20 5.5H109Zm69-80h604L480-720 178-200Zm302-40q17 0 28.5-11.5T520-280q0-17-11.5-28.5T480-320q-17 0-28.5 11.5T440-280q0 17 11.5 28.5T480-240Zm0-120q17 0 28.5-11.5T520-400v-120q0-17-11.5-28.5T480-560q-17 0-28.5 11.5T440-520v120q0 17 11.5 28.5T480-360Zm0-100Z" />
-                </svg>
-                <p className="text-red-800 text-sm ml-2"> Password must be at least 8 characters long</p>
-              </div>}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    height="24px"
+                    viewBox="0 -960 960 960"
+                    width="14px"
+                    fill="#991b1b"
+                  >
+                    <path d="M109-120q-11 0-20-5.5T75-140q-5-9-5.5-19.5T75-180l370-640q6-10 15.5-15t19.5-5q10 0 19.5 5t15.5 15l370 640q6 10 5.5 20.5T885-140q-5 9-14 14.5t-20 5.5H109Zm69-80h604L480-720 178-200Zm302-40q17 0 28.5-11.5T520-280q0-17-11.5-28.5T480-320q-17 0-28.5 11.5T440-280q0 17 11.5 28.5T480-240Zm0-120q17 0 28.5-11.5T520-400v-120q0-17-11.5-28.5T480-560q-17 0-28.5 11.5T440-520v120q0 17 11.5 28.5T480-360Zm0-100Z" />
+                  </svg>
+                  <p className="text-red-800 text-sm ml-2">
+                    {" "}
+                    Password must be at least 8 characters long
+                  </p>
+                </div>
+              )}
               <div className="flex flex-col w-full">
                 <div className="text-white/60 text-base font-semibold bg-[#0a0a0a] w-fit px-1 -mb-3 ml-2 z-10">
-                  Confirm Password
+                  Confirm Password <span className="text-yellow-500">*</span>
                 </div>
                 <div className="flex flex-row justify-between ">
                   <input
@@ -217,7 +248,12 @@ const SignupPage = () => {
                   </button>
                 </div>
               </div>
-              <div className="w-full mt-2">
+              <div className="flex w-full">
+                <p className="text-yellow-500 text-sm">
+                  Required fields are marked with an asterisk ( * )
+                </p>
+              </div>
+              <div className="w-full mt-1">
                 <button
                   type="submit"
                   className={`py-3 w-full font-bold tracking-wider text-black ${
@@ -226,9 +262,34 @@ const SignupPage = () => {
                       : "bg-white"
                   }`}
                   onClick={handleSignup}
-                  disabled={submitDisabled}
+                  disabled={submitDisabled || submitting}
                 >
-                  Sign up
+                  {submitting ? (
+                    <>
+                      <svg
+                        className="animate-spin mx-auto h-6 w-6 text-black"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    </>
+                  ) : (
+                    "Sign Up"
+                  )}
                 </button>
               </div>
             </form>
