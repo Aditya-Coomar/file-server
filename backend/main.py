@@ -195,8 +195,10 @@ async def send_otp(data: sendOTPSchema):
         user_data = db_connection.users_collection.find_one({"email": data.email})
         if not user_data:
             return JSONResponse(status_code=404, content={"message": "User not found with this email", "status": "error"})
+        """
         if (datetime.now() - user_data["verification_code_expires"]).seconds < 60:
             return JSONResponse(status_code=400, content={"message": "Please wait for 60 seconds before sending another OTP", "status": "error"})
+        """
         otp_verification_code = random.randint(100000, 999999)
         otp_email = mail_template.otp_template(otp_verification_code, data.email, "Verify your Account", "Thank you for choosing Data Dock. Use the following OTP to complete the procedure to verification of your account.")
         message = MessageSchema(
@@ -251,14 +253,14 @@ class verifyOTPSchema(BaseModel):
 async def verify_otp(data: verifyOTPSchema):
     try:
         if not data.email or not data.otp:
-            return JSONResponse(status_code=400, content={"message": "Email and OTP is required"})
+            return JSONResponse(status_code=400, content={"message": "Email and OTP is required", "status": "error"})
         user_data = db_connection.users_collection.find_one({"email": data.email})
         if not user_data:
-            return JSONResponse(status_code=404, content={"message": "User not found with this email"})
+            return JSONResponse(status_code=404, content={"message": "User not found with this email", "status": "error"})
         if datetime.now() > user_data["verification_code_expires"]:
-            return JSONResponse(status_code=403, content={"message": "OTP expired"})
+            return JSONResponse(status_code=403, content={"message": "OTP expired", "status": "error"})
         if not bcrypt.checkpw(str(data.otp).encode("utf-8"), user_data["verification_code"]):
-            return {"status": 400, "message": "Invalid OTP"}
+            return JSONResponse(status_code=400, content={"message": "Invalid OTP", "status": "error"})
         user_data["is_verified"] = True
         user_data["verification_code_expires"] = datetime.now()
         db_connection.users_collection.update_one({"_id": user_data["_id"]}, {"$set": user_data})
@@ -266,9 +268,9 @@ async def verify_otp(data: verifyOTPSchema):
             os.makedirs(f"{fso.root_directory}/{user_data['user_directory']['root']}")
         except FileExistsError:
             pass
-        return JSONResponse(status_code=200, content={"message": "OTP verified successfully"})
+        return JSONResponse(status_code=200, content={"message": "OTP verified successfully", "status": "success"})
     except Exception as e:
-        return JSONResponse(status_code=500, content={"message": str(e)})
+        return JSONResponse(status_code=500, content={"message": str(e), "status": "error"})
     
 @app.post("/api/auth/otp/verify/login")
 async def verify_otp(data: verifyOTPSchema):

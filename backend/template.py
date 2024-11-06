@@ -96,16 +96,16 @@ class HTMLTemplate:
             >
               {mail_body} OTP is
               valid for
-              <span style="font-weight: 600; color: #1f1f1f;">15 minutes</span>.
+              <span style="font-weight: 600; color: #1f1f1f;">10 minutes</span>.
               Do not share this code with others.
             </p>
             <p
               style="
                 margin: 0;
                 margin-top: 60px;
-                font-size: 30px;
+                font-size: 28px;
                 font-weight: 600;
-                letter-spacing: 17px;
+                letter-spacing: 15px;
                 color: #ba3d4f;
               "
             >

@@ -31,12 +31,13 @@ const VerifyAccountPage = () => {
         setSubmitting(false);
         setTimeout(() => {
           setShowError({ message: "", display: false });
-        }, 5000);
+        }, 6000);
       } else if (response.status === "success") {
         setShowSuccess({ message: response.message, display: true });
         setSubmitting(false);
         setTimeout(() => {
           setShowSuccess({ message: "", display: false });
+          router.push("/client/signup/verify/account/otp");
         }, 3000);
       }
     });
@@ -45,7 +46,7 @@ const VerifyAccountPage = () => {
     <>
       <SignupPageLayout title="Verify your Dock">
         <div className="flex flex-col items-center justify-center gap-4 w-[350px]">
-          <div className="w-full mt-4 md:mt-0 flex items-center justify-center text-yellow-50 text-xl md:text-2xl font-bold tracking-wider">
+          <div className="w-full mt-4 md:mt-0 flex items-center justify-center text-yellow-50 text-xl md:text-2xl font-bold tracking-wider text-center">
             Hey {userEmail},
           </div>
           <div className="w-full bg-white/5 text-white text-base py-5 px-3 rounded-sm text-center font-medium tracking-wide">
