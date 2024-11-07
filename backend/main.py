@@ -153,27 +153,27 @@ class loginUserSchema(BaseModel):
 async def login(user: loginUserSchema):
     try:
         if not user.user:
-            return JSONResponse(status_code=400, content={"message": "Email or Username is required"})
+            return JSONResponse(status_code=400, content={"message": "Email or Username is required", "status": "error"})
         
         user_data = db_connection.users_collection.find_one({"$or": [{"email": user.user}, {"username": user.user}]})
         if not user_data:
-            return JSONResponse(status_code=404, content={"message": "User not found"})
+            return JSONResponse(status_code=404, content={"message": "User not found", "status": "error"})
         
         if not bcrypt.checkpw(user.password.encode("utf-8"), user_data["password"]):
-            return JSONResponse(status_code=403, content={"message": "Invalid password"})
+            return JSONResponse(status_code=403, content={"message": "Invalid password", "status": "error"})
         
         if not user_data["is_verified"]:
-            return JSONResponse(status_code=403, content={"message": "User is not verified"})
+            return JSONResponse(status_code=403, content={"message": "User is not verified", "status": "error"})
         
         user_data["last_login"] = datetime.now().strftime("%a %d %B %Y, %H:%M:%S")
         db_connection.users_collection.update_one({"_id": user_data["_id"]}, {"$set": user_data})
         jwt_token = generate_access_token({"sub": str(user_data["_id"])}, expires_delta=timedelta(days=1))
-        return JSONResponse(status_code=200, content={"message": "User logged in successfully", "token": jwt_token})
+        return JSONResponse(status_code=200, content={"message": "User logged in successfully", "token": jwt_token, "status": "success"})
     except Exception as e:
-        return JSONResponse(status_code=500, content={"message": str(e)})
+        return JSONResponse(status_code=500, content={"message": str(e), "status": "error"})
 
 class sendOTPSchema(BaseModel):
-    email: EmailStr
+    email: str
 
 conf = ConnectionConfig(
    MAIL_USERNAME=os.getenv("MAIL_USER"),
@@ -192,7 +192,7 @@ async def send_otp(data: sendOTPSchema):
     try:
         if not data.email:
             return JSONResponse(status_code=400, content={"message": "Email is required", "status": "error"})
-        user_data = db_connection.users_collection.find_one({"email": data.email})
+        user_data = db_connection.users_collection.find_one({"$or": [{"email": data.email}, {"username": data.email}]})
         if not user_data:
             return JSONResponse(status_code=404, content={"message": "User not found with this email", "status": "error"})
         """
@@ -200,10 +200,10 @@ async def send_otp(data: sendOTPSchema):
             return JSONResponse(status_code=400, content={"message": "Please wait for 60 seconds before sending another OTP", "status": "error"})
         """
         otp_verification_code = random.randint(100000, 999999)
-        otp_email = mail_template.otp_template(otp_verification_code, data.email, "Verify your Account", "Thank you for choosing Data Dock. Use the following OTP to complete the procedure to verification of your account.")
+        otp_email = mail_template.otp_template(otp_verification_code, user_data["email"], "Verify your Account", "Thank you for choosing Data Dock. Use the following OTP to complete the procedure to verification of your account.")
         message = MessageSchema(
             subject="Verify your Account",
-            recipients=[data.email],
+            recipients=[user_data["email"]],
             body=otp_email,
             subtype=MessageType.html,
         )
@@ -221,12 +221,10 @@ async def send_otp(data: sendOTPSchema):
 async def login_email(data: sendOTPSchema):
     try:
         if not data.email:
-            return JSONResponse(status_code=400, content={"message": "Email is required"})
+            return JSONResponse(status_code=400, content={"message": "Email is required", "status": "error"})
         user_data = db_connection.users_collection.find_one({"email": data.email})
         if not user_data:
-            return JSONResponse(status_code=404, content={"message": "User not found with this email"})
-        if (datetime.now() - user_data["verification_code_expires"]).seconds < 60:
-            return {"status": 400, "message": "Please wait for 60 seconds before sending another OTP"}
+            return JSONResponse(status_code=404, content={"message": "User not found with this email", "status": "error"})
         otp_verification_code = random.randint(100000, 999999)
         otp_email = mail_template.otp_template(otp_verification_code, data.email, "Login to your account", "Use the following OTP to complete the procedure of logging into your account.")
         message = MessageSchema(
@@ -241,12 +239,12 @@ async def login_email(data: sendOTPSchema):
         db_connection.users_collection.update_one({"_id": user_data["_id"]}, {"$set": user_data})
         fm = FastMail(conf)
         await fm.send_message(message)
-        return JSONResponse(status_code=200, content={"message": "OTP sent successfully"})
+        return JSONResponse(status_code=200, content={"message": "OTP sent successfully", "status": "success"})
     except Exception as e:
-        return JSONResponse(status_code=500, content={"message": str(e)})
+        return JSONResponse(status_code=500, content={"message": str(e), "status": "error"})
 
 class verifyOTPSchema(BaseModel):
-    email: EmailStr
+    email: str
     otp: str
 
 @app.post("/api/auth/otp/verify/account")
@@ -254,7 +252,7 @@ async def verify_otp(data: verifyOTPSchema):
     try:
         if not data.email or not data.otp:
             return JSONResponse(status_code=400, content={"message": "Email and OTP is required", "status": "error"})
-        user_data = db_connection.users_collection.find_one({"email": data.email})
+        user_data = db_connection.users_collection.find_one({"$or": [{"email": data.email}, {"username": data.email}]})
         if not user_data:
             return JSONResponse(status_code=404, content={"message": "User not found with this email", "status": "error"})
         if datetime.now() > user_data["verification_code_expires"]:
@@ -276,21 +274,21 @@ async def verify_otp(data: verifyOTPSchema):
 async def verify_otp(data: verifyOTPSchema):
     try:
         if not data.email or not data.otp:
-            return JSONResponse(status_code=400, content={"message": "Email and OTP is required"})
+            return JSONResponse(status_code=400, content={"message": "Email and OTP is required", "status": "error"})
         user_data = db_connection.users_collection.find_one({"email": data.email})
         if not user_data:
-            return JSONResponse(status_code=404, content={"message": "User not found with this email"})
+            return JSONResponse(status_code=404, content={"message": "User not found with this email", "status": "error"})
         if datetime.now() > user_data["verification_code_expires"]:
-            return JSONResponse(status_code=403, content={"message": "OTP expired"})
+            return JSONResponse(status_code=403, content={"message": "OTP expired", "status": "error"})
         if not bcrypt.checkpw(str(data.otp).encode("utf-8"), user_data["verification_code"]):
-            return {"status": 400, "message": "Invalid OTP"}
+            return JSONResponse(status_code=400, content={"message": "Invalid OTP", "status": "error"})
         user_data["last_login"] = datetime.now().strftime("%a %d %B %Y, %H:%M:%S")
         user_data["verification_code_expires"] = datetime.now()
         db_connection.users_collection.update_one({"_id": user_data["_id"]}, {"$set": user_data})
         jwt_token = generate_access_token({"sub": str(user_data["_id"])}, expires_delta=timedelta(days=1))
-        return JSONResponse(status_code=200, content={"message": "User logged in successfully", "token": jwt_token})
+        return JSONResponse(status_code=200, content={"message": "User logged in successfully", "token": jwt_token, "status": "success"})
     except Exception as e:
-        return JSONResponse(status_code=500, content={"message": str(e)})
+        return JSONResponse(status_code=500, content={"message": str(e), "status": "error"})
 
 
 
@@ -299,7 +297,7 @@ async def get_user_profile(user: TokenData = Depends(get_current_active_user)):
     try:
         user_data = db_connection.users_collection.find_one({"_id": ObjectId(user.username)})
         if not user_data:
-            return JSONResponse(status_code=404, content={"message": "User not found"})
+            return JSONResponse(status_code=404, content={"message": "User not found", "status": "error"})
         response = {
             "email": user_data["email"],
             "fullname": user_data["fullname"],
@@ -307,7 +305,7 @@ async def get_user_profile(user: TokenData = Depends(get_current_active_user)):
         }
         return JSONResponse(status_code=200, content={"message": response, "status": "success"})
     except Exception as e:
-        return JSONResponse(status_code=500, content={"message": str(e)})
+        return JSONResponse(status_code=500, content={"message": str(e), "status": "error"})
     
 class getDirectorySchema(BaseModel):
     directory_path: str

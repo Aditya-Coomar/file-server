@@ -3,13 +3,21 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { CheckServerStatus } from "../../functions/apis/server-status";
 import { ReactTyped } from "react-typed";
-import { SimpleLogin } from "../../functions/apis/login";
 import { useRouter } from "next/navigation";
+import { DefaultLogin } from "../../functions/apis/login";
+import Cookies from "js-cookie";
 
 export default function Home() {
   const router = useRouter();
   const [serverStatus, setServerStatus] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
+
+  const [showError, setShowError] = useState({ message: "", display: false });
+  const [showSuccess, setShowSuccess] = useState({
+    message: "",
+    display: false,
+  });
+
   useEffect(() => {
     CheckServerStatus().then((response) => {
       if (response.status === 200) {
@@ -21,13 +29,40 @@ export default function Home() {
   }, []);
 
   const [user, setUser] = useState({ username: "", password: "" });
+  const [submitting, setSubmitting] = useState(false);
 
   const handleLogin = (e) => {
+    setSubmitting(true);
     e.preventDefault();
-    SimpleLogin(user.username, user.password).then((response) => {
-      alert(response.message);
+    DefaultLogin(user.username, user.password).then((response) => {
+      if (response.status === "success") {
+        setShowSuccess({ message: response.message, display: true });
+        Cookies.set("userAuth", response.token, { expires: 1 });
+        setTimeout(() => {
+          setShowSuccess({ message: "", display: false });
+          router.push("/client/dashboard");
+        }, 1000);
+      } else if (
+        response.status === "error" &&
+        response.message == "User is not verified"
+      ) {
+        setShowError({
+          message: response.message + ". Verify your account first.",
+          display: true,
+        });
+        sessionStorage.setItem("userEmail", user.username);
+        setTimeout(() => {
+          setShowError({ message: "", display: false });
+          router.push("/client/signup/verify/account");
+        }, 2000);
+      } else if (response.status === "error") {
+        setShowError({ message: response.message, display: true });
+        setSubmitting(false);
+        setTimeout(() => {
+          setShowError({ message: "", display: false });
+        }, 6000);
+      }
     });
-    setUser({ username: "", password: "" });
   };
   return (
     <>
@@ -136,10 +171,37 @@ export default function Home() {
                       ? "cursor-not-allowed bg-white/80"
                       : "bg-white"
                   }`}
-                  disabled={!serverStatus}
+                  disabled={!serverStatus || submitting}
                   onClick={handleLogin}
                 >
-                  Login
+                  {submitting ? (
+                    <>
+                      <svg
+                        className="animate-spin mx-auto h-6 w-6 text-black"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center gap-2">
+                      Login
+                    </div>
+                  )}
                 </button>
               </div>
             </form>
@@ -154,6 +216,7 @@ export default function Home() {
                   serverStatus ? "" : "cursor-not-allowed"
                 }`}
                 disabled={!serverStatus}
+                onClick={() => router.push("/client/signin/email")}
               >
                 <span>Continue with Email</span>
                 {/*<img src={"/icons/mail/white.svg"} className="w-auto h-5" alt="email" />*/}
@@ -170,6 +233,16 @@ export default function Home() {
                 </span>
               </p>
             </button>
+            {showError.display && (
+              <div className="bg-red-950/30 text-red-700 w-full text-sm md:text-base border border-red-900 font-mono py-3 px-2 text-center">
+                {showError.message}
+              </div>
+            )}
+            {showSuccess.display && (
+              <div className="bg-green-950/30 text-green-700 w-full text-sm md:text-base font-mono border border-green-900 py-4 px-2 text-center">
+                {showSuccess.message}
+              </div>
+            )}
           </div>
         </div>
       </div>

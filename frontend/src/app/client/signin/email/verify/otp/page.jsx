@@ -2,7 +2,11 @@
 import SignupPageLayout from "@/components/layout/signup";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { SendVerificationEmail, VerifyAccount } from "../../../../../../../functions/apis/signup";
+import {
+  VerifyLoginOTP,
+  LoginWithEmail,
+} from "../../../../../../../functions/apis/login";
+import Cookies from "js-cookie";
 
 const LoginAccountOtpPage = () => {
   const router = useRouter();
@@ -17,8 +21,10 @@ const LoginAccountOtpPage = () => {
   });
 
   useEffect(() => {
-    
-    setUserEmail(sessionStorage.getItem("userEmail"));
+    if (!sessionStorage.getItem("loginUserEmail")) {
+      router.push("/client/signin/email");
+    }
+    setUserEmail(sessionStorage.getItem("loginUserEmail"));
     if (countDownTimer > 0) {
       let timeLeft = countDownTimer;
       const timer = setInterval(() => {
@@ -52,7 +58,7 @@ const LoginAccountOtpPage = () => {
   const ResendOTP = () => {
     setSubmitDisabled(true);
     setResending(true);
-    SendVerificationEmail(userEmail).then((response) => {
+    LoginWithEmail(userEmail).then((response) => {
       if (response.status === "error") {
         setShowError({ message: response.message, display: true });
         setSubmitting(false);
@@ -76,7 +82,7 @@ const LoginAccountOtpPage = () => {
   const VerifyOTP = (e) => {
     e.preventDefault();
     setSubmitting(true);
-    VerifyAccount(userEmail, enteredOTP).then((response) => {
+    VerifyLoginOTP(userEmail, enteredOTP).then((response) => {
       if (response.status === "error") {
         setShowError({ message: response.message, display: true });
         setEnteredOTP("");
@@ -85,12 +91,13 @@ const LoginAccountOtpPage = () => {
           setShowError({ message: "", display: false });
         }, 6000);
       } else if (response.status === "success") {
-        setShowSuccess({ message: response.message + ". Account Verified.", display: true });
-        sessionStorage.removeItem("userEmail");
+        setShowSuccess({ message: response.message, display: true });
+        sessionStorage.removeItem("loginUserEmail");
+        Cookies.set("userAuth", response.token, { expires: 1 });
         setSubmitting(false);
         setTimeout(() => {
           setShowSuccess({ message: "", display: false });
-          router.push("/");
+          router.push("/client/dashboard");
         }, 2000);
       }
     });
@@ -98,13 +105,14 @@ const LoginAccountOtpPage = () => {
 
   return (
     <>
-      <SignupPageLayout title="Verify your Dock">
+      <SignupPageLayout title="Login to your Dock">
         <div className="flex flex-col items-center justify-center gap-4 w-[350px]">
           <div className="w-full mt-4 md:mt-0 flex items-center justify-center text-yellow-50 text-xl md:text-2xl font-bold tracking-wider text-center">
             Hey {userEmail},
           </div>
           <div className="w-full bg-white/5 text-white text-base py-5 px-3 rounded-sm text-center font-medium tracking-wide">
-            Welcome to Data Dock. Enter the OTP sent to your registered email address to login to your dock.
+            Welcome to Data Dock. Enter the OTP sent to your registered email
+            address to login to your dock.
           </div>
           <form className="flex flex-col gap-4 items-center justify-center w-full">
             <div className="flex flex-col w-full">

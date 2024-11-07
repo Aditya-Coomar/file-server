@@ -2,18 +2,12 @@
 import SignupPageLayout from "@/components/layout/signup";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { SendVerificationEmail } from "../../../../../functions/apis/signup";
+import { LoginWithEmail } from "../../../../../functions/apis/login";
 
 const SigninViaEmail = () => {
   const router = useRouter();
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [submitDisabled, setSubmitDisabled] = useState(false);
-
-  useEffect(() => {
-    if (registeredEmail.length === 0 || !registeredEmail.includes("@")) {
-        setSubmitDisabled(true);    
-    }
-  }, []);
   
   const [submitting, setSubmitting] = useState(false);
 
@@ -26,7 +20,7 @@ const SigninViaEmail = () => {
   const SendVerficationCode = (e) => {
     setSubmitting(true);
     e.preventDefault();
-    SendVerificationEmail(registeredEmail).then((response) => {
+    LoginWithEmail(registeredEmail).then((response) => {
       if (response.status === "error") {
         setShowError({ message: response.message, display: true });
         setSubmitting(false);
@@ -39,14 +33,14 @@ const SigninViaEmail = () => {
         setSubmitting(false);
         setTimeout(() => {
           setShowSuccess({ message: "", display: false });
-          router.push("/client/signup/verify/account/otp");
+          router.push("/client/signin/email/verify/otp");
         }, 2000);
       }
     });
   };
   return (
     <>
-      <SignupPageLayout title="Sign in to your Dock">
+      <SignupPageLayout title="Login to your Dock">
         <div className="flex flex-col items-center justify-center gap-4 w-[350px]">
           <div className="w-full mt-4 md:mt-0 flex items-center justify-center text-yellow-50 text-xl md:text-2xl font-bold tracking-wider text-center">
             Welcome Back
@@ -74,7 +68,7 @@ const SigninViaEmail = () => {
           <div className="w-full mt-1">
             <button
               type="submit"
-              className={`py-3 w-full font-bold tracking-wider text-black ${submitDisabled ? "bg-white/70" : "bg-white/95"}`}
+              className={`py-3 w-full font-bold tracking-wider text-black ${submitDisabled ? "bg-white/70" : "bg-white"}`}
               disabled={submitting || submitDisabled}
               onClick={SendVerficationCode}
             >
