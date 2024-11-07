@@ -38,7 +38,7 @@ const VerifyAccountPage = () => {
         setTimeout(() => {
           setShowSuccess({ message: "", display: false });
           router.push("/client/signup/verify/account/otp");
-        }, 3000);
+        }, 2000);
       }
     });
   };

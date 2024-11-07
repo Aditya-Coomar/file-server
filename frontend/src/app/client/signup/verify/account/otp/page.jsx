@@ -96,7 +96,7 @@ const VerifyAccountOtpPage = () => {
         setTimeout(() => {
           setShowSuccess({ message: "", display: false });
           router.push("/");
-        }, 3000);
+        }, 2000);
       }
     });
   };

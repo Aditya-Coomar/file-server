@@ -85,7 +85,7 @@ const SignupPage = () => {
           setShowSuccess({ message: response.message, display: true });
           setTimeout(() => {
             router.push("/client/signup/verify/account");
-          }, 3000);
+          }, 2000);
         }
       }
     );
