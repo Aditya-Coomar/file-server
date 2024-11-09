@@ -292,7 +292,7 @@ const ChildDock = ({ params }) => {
                 }
                 className="h-5 w-auto"
               />
-              <div className="text-base font-medium tracking-wide w-full flex items-center justify-between">
+              <div className="text-base font-medium tracking-wide w-full grid grid-cols-2 items-center">
                 <span className="text-nowrap truncate">{item.name}</span>
                 <div className="flex justify-end items-center gap-3">
                   <button
