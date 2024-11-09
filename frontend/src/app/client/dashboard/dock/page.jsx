@@ -8,6 +8,8 @@ import {
   UploadFile,
   DownloadFile,
   DownloadFolder,
+  DeleteFile,
+  DeleteFolder,
 } from "../../../../../functions/apis/user";
 import { authExpiry } from "../../../../../functions/helpers/auth-expiry";
 import Cookies from "js-cookie";
@@ -179,6 +181,44 @@ const ParentDock = () => {
         }
       }
     });
+  };
+
+  const DeleteNewFile = (filename) => {
+    DeleteFile(Cookies.get("userAuth"), userData?.username, filename).then(
+      (response) => {
+        if (response.status === "error") {
+          setShowError({ message: response.message, display: true });
+          setTimeout(() => {
+            setShowError({ message: "", display: false });
+          }, 4000);
+        } else {
+          setNewContent(newContent + 1);
+          setShowSuccess({ message: response.message, display: true });
+          setTimeout(() => {
+            setShowSuccess({ message: "", display: false });
+          }, 2000);
+        }
+      }
+    );
+  };
+
+  const DeleteNewFolder = (foldername) => {
+    DeleteFolder(Cookies.get("userAuth"), userData?.username, foldername).then(
+      (response) => {
+        if (response.status === "error") {
+          setShowError({ message: response.message, display: true });
+          setTimeout(() => {
+            setShowError({ message: "", display: false });
+          }, 4000);
+        } else {
+          setNewContent(newContent + 1);
+          setShowSuccess({ message: response.message, display: true });
+          setTimeout(() => {
+            setShowSuccess({ message: "", display: false });
+          }, 2000);
+        }
+      }
+    );
   };
 
   return (
@@ -420,11 +460,18 @@ const ParentDock = () => {
                       <button onClick={() => DownloadNewFolder(item.name)}>
                         <img
                           src={"/icons/zip.png"}
-                          className="h-5 mt-1.5 w-auto"
+                          className="h-5 mt-1 w-auto"
                         />
                       </button>
                     )}
                   </>
+                    <button onClick={() => 
+                        item.type == "directory"
+                            ? DeleteNewFolder(item.name)
+                            : DeleteNewFile(item.name)
+                    }>
+                        <img src={"/icons/delete.png"} className="h-5 w-auto" />
+                    </button>
                 </div>
               </div>
             </div>

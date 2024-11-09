@@ -1,4 +1,3 @@
-
 import { SERVER_URL } from "../../constants";
 
 const UserProfile = async (authToken) => {
@@ -200,6 +199,61 @@ const DownloadFolder = async (authToken, path, foldername) => {
   }
 };
 
+const DeleteFile = async (authToken, path, filename) => {
+  const myHeaders = new Headers();
+  myHeaders.append("Authorization", `Bearer ${authToken}`);
+  myHeaders.append("ngrok-skip-browser-warning", "790355");
+
+  const formdata = new FormData();
+  formdata.append("directory_path", path);
+  formdata.append("file_name", filename);
+
+  const requestOptions = {
+    method: "POST",
+    headers: myHeaders,
+    body: formdata,
+    redirect: "follow",
+  };
+
+  try {
+    const response = await fetch(
+      `${SERVER_URL}/api/auth/user/delete/file`,
+      requestOptions
+    );
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const DeleteFolder = async (authToken, path, foldername) => {
+  const myHeaders = new Headers();
+  myHeaders.append("Authorization", `Bearer ${authToken}`);
+  myHeaders.append("ngrok-skip-browser-warning", "790355");
+
+  const formdata = new FormData();
+  formdata.append("directory_path", `${path}/${foldername}`);
+
+  const requestOptions = {
+    method: "POST",
+    headers: myHeaders,
+    body: formdata,
+    redirect: "follow",
+  };
+
+  try {
+    const response = await fetch(
+      `${SERVER_URL}/api/auth/user/delete/folder`,
+      requestOptions
+    );
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 export {
   UserProfile,
   DirectoryInfo,
@@ -208,4 +262,6 @@ export {
   UploadFile,
   DownloadFile,
   DownloadFolder,
+  DeleteFile,
+  DeleteFolder,
 };

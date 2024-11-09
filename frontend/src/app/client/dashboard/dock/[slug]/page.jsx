@@ -5,10 +5,9 @@ import { useState, useEffect } from "react";
 import {
   UserProfile,
   DirectoryContent,
-  DirectoryInfo,
-  CreateFolder,
   UploadFile,
   DownloadFile,
+  DeleteFile,
 } from "../../../../../../functions/apis/user";
 import { useRouter } from "next/navigation";
 
@@ -104,7 +103,34 @@ const ChildDock = ({ params }) => {
   };
 
   const DownloadNewFile = (filename) => {
-    DownloadFile(Cookies.get("userAuth"), `${userData?.username}/${slug}`, filename).then(
+    DownloadFile(
+      Cookies.get("userAuth"),
+      `${userData?.username}/${slug}`,
+      filename
+    ).then((response) => {
+      if (response.status === "error") {
+        setShowError({ message: response.message, display: true });
+        setTimeout(() => {
+          setShowError({ message: "", display: false });
+        }, 4000);
+      } else {
+        try {
+          const url = window.URL.createObjectURL(new Blob([response]));
+          const link = document.createElement("a");
+          link.href = url;
+          link.setAttribute("download", filename);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    });
+  };
+
+  const DeleteNewFile = (filename) => {
+    DeleteFile(Cookies.get("userAuth"), `${userData?.username}/${slug}`, filename).then(
       (response) => {
         if (response.status === "error") {
           setShowError({ message: response.message, display: true });
@@ -112,17 +138,11 @@ const ChildDock = ({ params }) => {
             setShowError({ message: "", display: false });
           }, 4000);
         } else {
-          try {
-            const url = window.URL.createObjectURL(new Blob([response]));
-            const link = document.createElement("a");
-            link.href = url;
-            link.setAttribute("download", filename);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-          } catch (error) {
-            console.error(error);
-          }
+          setNewContent(newContent + 1);
+          setShowSuccess({ message: response.message, display: true });
+          setTimeout(() => {
+            setShowSuccess({ message: "", display: false });
+          }, 2000);
         }
       }
     );
@@ -273,25 +293,30 @@ const ChildDock = ({ params }) => {
                 className="h-5 w-auto"
               />
               <div className="text-base font-medium tracking-wide w-full flex items-center justify-between">
-                {item.name}
-                <button
-                  onClick={() => {
-                    if (item.type == "directory") {
-                      router.push(`/client/dashboard/dock/${item.name}`);
-                    } else {
+                <span className="text-nowrap truncate">{item.name}</span>
+                <div className="flex justify-end items-center gap-3">
+                  <button
+                    onClick={() => {
+                      if (item.type == "directory") {
+                        router.push(`/client/dashboard/dock/${item.name}`);
+                      } else {
                         DownloadNewFile(item.name);
-                    }
-                  }}
-                >
-                  <img
-                    src={
-                      item.type == "directory"
-                        ? "/icons/open_folder.png"
-                        : "/icons/download_file.png"
-                    }
-                    className="h-5 w-auto flex justify-end"
-                  />
-                </button>
+                      }
+                    }}
+                  >
+                    <img
+                      src={
+                        item.type == "directory"
+                          ? "/icons/open_folder.png"
+                          : "/icons/download_file.png"
+                      }
+                      className="h-5 w-auto flex justify-end"
+                    />
+                  </button>
+                  <button onClick={() => DeleteNewFile(item.name)}>
+                    <img src={"/icons/delete.png"} className="h-5 w-auto" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
