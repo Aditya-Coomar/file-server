@@ -41,6 +41,7 @@ const ChildDock = ({ params }) => {
       } else {
         UserProfile(Cookies.get("userAuth")).then((response) => {
           if (response.status === "error") {
+            Cookies.remove("userAuth");
             router.push("/");
           } else if (response.status === "success") {
             setUserData(response.message);
