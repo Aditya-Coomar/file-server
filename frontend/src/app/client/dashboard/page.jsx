@@ -114,7 +114,7 @@ const Dashboard = () => {
         </div>
 
         <div className="flex-grow">
-          <div className="bg-transparent w-full flex flex-col justify-center items-center gap-6 py-3 px-3 rounded-md text-white mt-16">
+          <div className="bg-transparent w-full flex flex-col justify-center items-center gap-6 py-3 px-3 rounded-md text-white mt-5">
             <button className="flex flex-col gap-3 justify-center items-center"
             type="button"
             onClick={() => router.push("/client/dashboard/dock")}
