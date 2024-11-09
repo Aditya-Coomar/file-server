@@ -88,3 +88,19 @@ class FileServerOperations:
             raise Exception(f"Error scanning directory: {str(e)}")
         
         return results
+    
+    
+    def delete_directory(self, directory_path: str):
+        try:
+            directory = Path(f"{self.root_directory}/{directory_path}")
+            if not directory.exists():
+                raise FileNotFoundError(f"Directory not found: {directory_path}")
+            
+            # Delete directory
+            directory.rmdir()
+            return directory_path
+            
+        except PermissionError:
+            raise PermissionError(f"Permission denied: Cannot delete {directory_path}")
+        except Exception as e:
+            raise Exception(f"Error deleting directory: {str(e)}")

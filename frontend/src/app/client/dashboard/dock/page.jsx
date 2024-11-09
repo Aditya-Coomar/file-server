@@ -172,7 +172,10 @@ const ParentDock = () => {
           link.remove();
           window.URL.revokeObjectURL(url);
         } catch (error) {
-          console.error(error);
+          setShowError({ message: "Error Downloading", display: true });
+          setTimeout(() => {
+            setShowError({ message: "", display: false });
+          }, 3000);
         }
       }
     });
@@ -415,7 +418,10 @@ const ParentDock = () => {
                   <>
                     {item.type == "directory" && (
                       <button onClick={() => DownloadNewFolder(item.name)}>
-                        <img src={"/icons/zip.png"} className="h-5 mt-1.5 w-auto" />
+                        <img
+                          src={"/icons/zip.png"}
+                          className="h-5 mt-1.5 w-auto"
+                        />
                       </button>
                     )}
                   </>

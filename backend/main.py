@@ -436,6 +436,44 @@ async def download_folder(
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": str(e), "status": "error"})
 
+@app.post("/api/auth/user/delete/file")
+async def delete_file(
+    directory_path: str = Form(...),
+    file_name: str = Form(...),
+    user: TokenData = Depends(get_current_active_user)):
+    try:
+        user_data = db_connection.users_collection.find_one({"_id": ObjectId(user.username)})
+        if not user_data:
+            return JSONResponse(status_code=404, content={"message": "User not found", "status": "error"})
+        if not os.path.exists(f"{fso.root_directory}/{directory_path}/{file_name}"):
+            return JSONResponse(status_code=404, content={"message": "File not found", "status": "error"})
+        os.remove(f"{fso.root_directory}/{directory_path}/{file_name}")
+        folder_size = fso.get_directory_size(f"{fso.root_directory}/{user_data['user_directory']['root']}")/(1024*1024*1024)
+        user_data["user_directory"]["used_space"] = folder_size
+        db_connection.users_collection.update_one({"_id": user_data["_id"]}, {"$set": user_data})
+        return JSONResponse(status_code=200, content={"message": "File deleted successfully", "status": "success"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": str(e), "status": "error"})
+
+@app.post("/api/auth/user/delete/folder")
+async def delete_folder(
+    directory_path: str = Form(...),
+    user: TokenData = Depends(get_current_active_user)):
+    try:
+        user_data = db_connection.users_collection.find_one({"_id": ObjectId(user.username)})
+        if not user_data:
+            return JSONResponse(status_code=404, content={"message": "User not found", "status": "error"})
+        if not os.path.exists(f"{fso.root_directory}/{directory_path}"):
+            return JSONResponse(status_code=404, content={"message": "Directory not found", "status": "error"})
+        action = fso.delete_directory(directory_path)
+        folder_size = fso.get_directory_size(f"{fso.root_directory}/{user_data['user_directory']['root']}")/(1024*1024*1024)
+        user_data["user_directory"]["used_space"] = folder_size
+        db_connection.users_collection.update_one({"_id": user_data["_id"]}, {"$set": user_data})
+        return JSONResponse(status_code=200, content={"message": f"Folder {action} deleted successfully", "status": "success"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": str(e), "status": "error"})
+
+
 # Run the FastAPI application
 if __name__ == "__main__":
     import uvicorn
