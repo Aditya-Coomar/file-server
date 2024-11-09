@@ -38,7 +38,7 @@ const Dashboard = () => {
   }, []);
   return (
     <>
-      <div className="p-2 flex flex-col gap-2 min-h-screen overflow-auto">
+      <div className="p-2 flex flex-col gap-2 h-screen overflow-auto">
         <div className="bg-white/5 w-full flex flex-col gap-6 py-3 px-3 rounded-md text-white">
           <div className="w-full flex justify-between items-center gap-2">
             <img
@@ -66,6 +66,16 @@ const Dashboard = () => {
                 userData.email ? "bg-green-600" : "bg-red-700"
               } rounded-full h-2 w-2`}
             ></div>
+          </div>
+          <div className="w-full flex justify-end -mt-14">
+            <button onClick={
+              () => {
+                Cookies.remove("userAuth");
+                router.push("/");
+              }
+            }>
+              <img src={"/icons/logout.png"} className="h-8 w-auto" />
+            </button>
           </div>
         </div>
 

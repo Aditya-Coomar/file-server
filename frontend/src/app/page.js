@@ -6,6 +6,7 @@ import { ReactTyped } from "react-typed";
 import { useRouter } from "next/navigation";
 import { DefaultLogin } from "../../functions/apis/login";
 import Cookies from "js-cookie";
+import { authExpiry } from "../../functions/helpers/auth-expiry";
 
 export default function Home() {
   const router = useRouter();
@@ -22,6 +23,13 @@ export default function Home() {
     CheckServerStatus().then((response) => {
       if (response.status === 200) {
         setServerStatus(true);
+        if (Cookies.get("userAuth")) {
+          if (authExpiry(Cookies.get("userAuth"))) {
+            router.push("/");
+          } else {
+            router.push("/client/dashboard");
+          } 
+        }
       } else {
         setServerStatus(false);
       }
