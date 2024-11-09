@@ -8,6 +8,7 @@ import {
   DirectoryInfo,
   CreateFolder,
   UploadFile,
+  DownloadFile,
 } from "../../../../../../functions/apis/user";
 import { useRouter } from "next/navigation";
 
@@ -102,6 +103,31 @@ const ChildDock = ({ params }) => {
     });
   };
 
+  const DownloadNewFile = (filename) => {
+    DownloadFile(Cookies.get("userAuth"), `${userData?.username}/${slug}`, filename).then(
+      (response) => {
+        if (response.status === "error") {
+          setShowError({ message: response.message, display: true });
+          setTimeout(() => {
+            setShowError({ message: "", display: false });
+          }, 4000);
+        } else {
+          try {
+            const url = window.URL.createObjectURL(new Blob([response]));
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          } catch (error) {
+            console.error(error);
+          }
+        }
+      }
+    );
+  };
+
   return (
     <>
       <div className="p-2 flex flex-col gap-2 min-h-screen overflow-auto">
@@ -157,74 +183,6 @@ const ChildDock = ({ params }) => {
             </div>
           </button>
         </div>
-
-        {createFolderForm && (
-          <div className="bg-white/5 w-full flex flex-col gap-4 py-3 px-3 rounded-md text-white">
-            <div className="w-full flex justify-between items-center gap-3">
-              <img
-                src={"/icons/folder.png"}
-                alt="Folder Image"
-                className="h-7 w-auto"
-              />
-              <div className="flex flex-col w-full">
-                <input
-                  type="text"
-                  className="w-full font-medium tracking-wide rounded-md text-lg py-3 bg-transparent border border-white/10 text-white/80 px-3 placeholder:text-white/40 placeholder:text-base active:border-0 focus:border-0"
-                  name="folderName"
-                  placeholder="enter your collection name"
-                  value={newFolderName.name}
-                  onChange={(e) =>
-                    setNewFolderName({
-                      name: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </div>
-            <div className="w-full grid grid-cols-2 items-center gap-2">
-              <button
-                type="button"
-                className="bg-white/10 py-2 rounded-md text-white/80 font-semibold tracking-wide"
-                onClick={() => setCreateFolderForm(false)}
-              >
-                Close
-              </button>
-              <button
-                type="button"
-                className="bg-white/90 py-2 rounded-md text-black font-bold tracking-wide"
-                onClick={CreateNewFolder}
-                disabled={submitting}
-              >
-                {submitting ? (
-                  <>
-                    <svg
-                      className="animate-spin mx-auto h-6 w-6 text-black"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                  </>
-                ) : (
-                  <>Create</>
-                )}
-              </button>
-            </div>
-          </div>
-        )}
 
         {uploadFileForm && (
           <div className="bg-white/5 w-full flex flex-col gap-4 py-3 px-3 rounded-md text-white">
@@ -321,7 +279,7 @@ const ChildDock = ({ params }) => {
                     if (item.type == "directory") {
                       router.push(`/client/dashboard/dock/${item.name}`);
                     } else {
-                      console.log("Download File");
+                        DownloadNewFile(item.name);
                     }
                   }}
                 >

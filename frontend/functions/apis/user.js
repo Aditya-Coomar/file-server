@@ -1,3 +1,4 @@
+
 import { SERVER_URL } from "../../constants";
 
 const UserProfile = async (authToken) => {
@@ -135,4 +136,76 @@ const UploadFile = async (authToken, path, file) => {
   }
 };
 
-export { UserProfile, DirectoryInfo, DirectoryContent, CreateFolder, UploadFile };
+const DownloadFile = async (authToken, path, filename) => {
+  const myHeaders = new Headers();
+  myHeaders.append("Authorization", `Bearer ${authToken}`);
+  myHeaders.append("ngrok-skip-browser-warning", "790355");
+
+  const formdata = new FormData();
+  formdata.append("directory_path", "aditya_coomar");
+  formdata.append("file_name", "UNITV COA.pdf");
+
+  const requestOptions = {
+    method: "POST",
+    headers: myHeaders,
+    body: formdata,
+    redirect: "follow",
+  };
+
+  try {
+    const response = await fetch(
+      `${SERVER_URL}/api/auth/user/download/file`,
+      requestOptions
+    );
+    if (!response.ok) {
+      const message = await response.json();
+      return message;
+    }
+    const blob = await response.blob();
+    return blob;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const DownloadFolder = async (authToken, path, foldername) => {
+  const myHeaders = new Headers();
+  myHeaders.append("Authorization", `Bearer ${authToken}`);
+  myHeaders.append("ngrok-skip-browser-warning", "790355");
+
+  const formdata = new FormData();
+  formdata.append("directory_path", `${path}/${foldername}`);
+
+  const requestOptions = {
+    method: "POST",
+    headers: myHeaders,
+    body: formdata,
+    redirect: "follow",
+  };
+
+  try {
+    const response = await fetch(
+      `${SERVER_URL}/api/auth/user/download/folder`,
+      requestOptions
+    );
+    if (!response.ok) {
+      const message = await response.json();
+      return message;
+    } else {
+      const blob = await response.blob();
+      return blob;
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export {
+  UserProfile,
+  DirectoryInfo,
+  DirectoryContent,
+  CreateFolder,
+  UploadFile,
+  DownloadFile,
+  DownloadFolder,
+};

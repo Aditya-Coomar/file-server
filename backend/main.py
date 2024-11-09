@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
 from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError, BaseModel, EmailStr, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -21,6 +21,9 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from bson import ObjectId
 from fastapi import HTTPException
 from pathlib import Path
+import mimetypes
+import zipfile
+import io
 
 load_dotenv()
 app = FastAPI()      # Create a FastAPI instance
@@ -352,6 +355,9 @@ async def create_directory(data: createDirectorySchema, user: TokenData = Depend
         user_data = db_connection.users_collection.find_one({"_id": ObjectId(user.username)})
         if not user_data:
             return JSONResponse(status_code=404, content={"message": "User not found", "status": "error"})
+        if (user_data["user_directory"]["allocated_space"] - user_data["user_directory"]["used_space"]) < 0.01:
+            return JSONResponse(status_code=400, content={"message": "No space left in the directory", "status": "error"})
+        
         if os.path.exists(f"{fso.root_directory}/{data.base_directory_path}/{data.directory_name}"):
             return JSONResponse(status_code=400, content={"message": "Directory already exists", "status": "error"})
         if not os.path.exists(f"{data.base_directory_path}/{data.directory_name}"):
@@ -376,6 +382,8 @@ async def upload_file(
             return JSONResponse(status_code=404, content={"message": "Directory not found", "status": "error"})
         file_path = os.path.join(f"{fso.root_directory}/{directory_path}", file.filename)
         with open(file_path, "wb") as buffer:
+            if (user_data["user_directory"]["allocated_space"] - user_data["user_directory"]["used_space"]) < (file.file.read().__sizeof__()/(1024*1024*1024)):
+                return JSONResponse(status_code=400, content={"message": "No space left in the directory", "status": "error"})
             buffer.write(file.file.read())
         folder_size = fso.get_directory_size(f"{fso.root_directory}/{user_data['user_directory']['root']}")/(1024*1024*1024)
         user_data["user_directory"]["used_space"] = folder_size
@@ -384,7 +392,49 @@ async def upload_file(
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": str(e), "status": "error"})
 
+@app.post("/api/auth/user/download/file")
+async def download_file(
+    directory_path: str = Form(...),
+    file_name: str = Form(...),
+    user: TokenData = Depends(get_current_active_user)):
+    try:
+        user_data = db_connection.users_collection.find_one({"_id": ObjectId(user.username)})
+        if not user_data:
+            return JSONResponse(status_code=404, content={"message": "User not found", "status": "error"})
+        if not os.path.exists(f"{fso.root_directory}/{directory_path}/{file_name}"):
+            return JSONResponse(status_code=404, content={"message": "File not found", "status": "error"})
+        return FileResponse(f"{fso.root_directory}/{directory_path}/{file_name}", filename=file_name)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": str(e), "status": "error"})
 
+@app.post("/api/auth/user/download/folder")
+async def download_folder(
+    directory_path: str = Form(...),
+    user: TokenData = Depends(get_current_active_user)):
+    try:
+        user_data = db_connection.users_collection.find_one({"_id": ObjectId(user.username)})
+        if not user_data:
+            return JSONResponse(status_code=404, content={"message": "User not found", "status": "error"})
+        if not os.path.exists(f"{fso.root_directory}/{directory_path}"):
+            return JSONResponse(status_code=404, content={"message": "Directory not found", "status": "error"})
+        zip_buffer = io.BytesIO()
+        exclude_patterns = []  # Define exclude_patterns as an empty list or add patterns to exclude
+        path = Path(f"{fso.root_directory}/{directory_path}")
+        with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+            for root, dirs, files in os.walk(path):
+                rel_path = Path(root).relative_to(path.parent)
+                # Process each file
+                for file in files:
+                    file_path = Path(root) / file
+                    zip_path = rel_path / file
+                    # Skip excluded patterns
+                    if exclude_patterns and any(pattern in str(zip_path) for pattern in exclude_patterns):
+                        continue
+                    zip_file.write(file_path, zip_path)
+        zip_buffer.seek(0)
+        return StreamingResponse(zip_buffer, media_type="application/x-zip-compressed", headers={"Content-Disposition": f"attachment; filename={path.name}.zip"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": str(e), "status": "error"})
 
 # Run the FastAPI application
 if __name__ == "__main__":

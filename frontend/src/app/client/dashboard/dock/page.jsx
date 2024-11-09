@@ -6,6 +6,8 @@ import {
   CreateFolder,
   DirectoryContent,
   UploadFile,
+  DownloadFile,
+  DownloadFolder,
 } from "../../../../../functions/apis/user";
 import { authExpiry } from "../../../../../functions/helpers/auth-expiry";
 import Cookies from "js-cookie";
@@ -120,6 +122,60 @@ const ParentDock = () => {
         }
       }
     );
+  };
+
+  const DownloadNewFile = (filename) => {
+    DownloadFile(Cookies.get("userAuth"), userData?.username, filename).then(
+      (response) => {
+        if (response.status === "error") {
+          setShowError({ message: response.message, display: true });
+          setTimeout(() => {
+            setShowError({ message: "", display: false });
+          }, 4000);
+        } else {
+          try {
+            const url = window.URL.createObjectURL(new Blob([response]));
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          } catch (error) {
+            console.error(error);
+          }
+        }
+      }
+    );
+  };
+
+  const DownloadNewFolder = (foldername) => {
+    DownloadFolder(
+      Cookies.get("userAuth"),
+      userData?.username,
+      foldername
+    ).then((response) => {
+      if (response.status === "error") {
+        setShowError({ message: response.message, display: true });
+        setTimeout(() => {
+          setShowError({ message: "", display: false });
+        }, 4000);
+      } else {
+        try {
+          const url = window.URL.createObjectURL(new Blob([response]));
+          const link = document.createElement("a");
+          link.href = url;
+          let filename = foldername + ".zip";
+          link.setAttribute("download", filename);
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.URL.revokeObjectURL(url);
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    });
   };
 
   return (
@@ -336,25 +392,34 @@ const ParentDock = () => {
                 className="h-5 w-auto"
               />
               <div className="text-base font-medium tracking-wide w-full flex items-center justify-between">
-                {item.name}
-                <button
-                  onClick={() => {
-                    if (item.type == "directory") {
-                      router.push(`/client/dashboard/dock/${item.name}`);
-                    } else {
-                      console.log("Download File");
-                    }
-                  }}
-                >
-                  <img
-                    src={
-                      item.type == "directory"
-                        ? "/icons/open_folder.png"
-                        : "/icons/download_file.png"
-                    }
-                    className="h-5 w-auto flex justify-end"
-                  />
-                </button>
+                <span className="text-nowrap truncate">{item.name}</span>
+                <div className="flex justify-end items-center gap-4">
+                  <button
+                    onClick={() => {
+                      if (item.type == "directory") {
+                        router.push(`/client/dashboard/dock/${item.name}`);
+                      } else {
+                        DownloadNewFile(item.name);
+                      }
+                    }}
+                  >
+                    <img
+                      src={
+                        item.type == "directory"
+                          ? "/icons/open_folder.png"
+                          : "/icons/download_file.png"
+                      }
+                      className="h-5 w-auto"
+                    />
+                  </button>
+                  <>
+                    {item.type == "directory" && (
+                      <button onClick={() => DownloadNewFolder(item.name)}>
+                        <img src={"/icons/zip.png"} className="h-5 mt-1.5 w-auto" />
+                      </button>
+                    )}
+                  </>
+                </div>
               </div>
             </div>
           ))}
