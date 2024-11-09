@@ -100,28 +100,26 @@ const ParentDock = () => {
   const UploadNewFile = (e) => {
     e.preventDefault();
     setSubmitting(true);
-    UploadFile(
-      Cookies.get("userAuth"),
-      userData?.username,
-      newFile.file
-    ).then((response) => {
-      if (response.status === "error") {
-        setShowError({ message: response.message, display: true });
-        setSubmitting(false);
-        setTimeout(() => {
-          setShowError({ message: "", display: false });
-        }, 4000);
-      } else if (response.status === "success") {
-        setShowSuccess({ message: response.message, display: true });
-        setNewContent(newContent + 1);
-        setSubmitting(false);
-        setUploadFileForm(false);
-        setTimeout(() => {
-          setShowSuccess({ message: "", display: false });
-          setNewFile({ file: null, path: "" });
-        }, 2000);
+    UploadFile(Cookies.get("userAuth"), userData?.username, newFile.file).then(
+      (response) => {
+        if (response.status === "error") {
+          setShowError({ message: response.message, display: true });
+          setSubmitting(false);
+          setTimeout(() => {
+            setShowError({ message: "", display: false });
+          }, 4000);
+        } else if (response.status === "success") {
+          setShowSuccess({ message: response.message, display: true });
+          setNewContent(newContent + 1);
+          setSubmitting(false);
+          setUploadFileForm(false);
+          setTimeout(() => {
+            setShowSuccess({ message: "", display: false });
+            setNewFile({ file: null, path: "" });
+          }, 2000);
+        }
       }
-    });
+    );
   };
 
   return (
@@ -150,10 +148,13 @@ const ParentDock = () => {
             >
               <path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm8-360-36 36q-11 11-11 28t11 28q11 11 28 11t28-11l104-104q12-12 12-28t-12-28L508-612q-11-11-28-11t-28 11q-11 11-11 28t11 28l36 36H360q-17 0-28.5 11.5T320-480q0 17 11.5 28.5T360-440h128Z" />
             </svg>
-            <div className="text-base font-semibold tracking-wide">
+            <div className="text-base font-semibold tracking-wide flex justify-between w-full items-center">
               {"/"}
               {userData?.username}
               {"/"}
+              <button onClick={() => router.push("/client/dashboard")}>
+                <img src={"/icons/home.png"} className="h-6 w-auto" />
+              </button>
             </div>
           </div>
         </div>
@@ -260,9 +261,7 @@ const ParentDock = () => {
                   className="w-full font-medium tracking-wide rounded-md text-sm py-3 bg-transparent border border-white/10 text-white/80 px-3 placeholder:text-white/40 placeholder:text-base active:border-0 focus:border-0"
                   name="uploadFile"
                   placeholder="upload your file"
-                  onChange={(e) =>
-                    setNewFile({file: e.target.files[0]})
-                  }
+                  onChange={(e) => setNewFile({ file: e.target.files[0] })}
                 />
               </div>
             </div>
@@ -339,13 +338,13 @@ const ParentDock = () => {
               <div className="text-base font-medium tracking-wide w-full flex items-center justify-between">
                 {item.name}
                 <button
-                onClick={() => {
+                  onClick={() => {
                     if (item.type == "directory") {
-                        router.push(`/client/dashboard/dock/${item.name}`);
+                      router.push(`/client/dashboard/dock/${item.name}`);
                     } else {
-                        console.log("Download File");
+                      console.log("Download File");
                     }
-                }}
+                  }}
                 >
                   <img
                     src={
