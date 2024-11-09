@@ -2,10 +2,7 @@ import { SERVER_URL } from "../../constants";
 
 const UserProfile = async (authToken) => {
   const myHeaders = new Headers();
-  myHeaders.append(
-    "Authorization",
-    `Bearer ${authToken}`
-  );
+  myHeaders.append("Authorization", `Bearer ${authToken}`);
   myHeaders.append("Content-Type", "application/json");
   myHeaders.append("ngrok-skip-browser-warning", "790355");
 
@@ -27,4 +24,115 @@ const UserProfile = async (authToken) => {
   }
 };
 
-export { UserProfile };
+const DirectoryInfo = async (authToken) => {
+  const myHeaders = new Headers();
+  myHeaders.append("Authorization", `Bearer ${authToken}`);
+  myHeaders.append("Content-Type", "application/json");
+  myHeaders.append("ngrok-skip-browser-warning", "790355");
+
+  const requestOptions = {
+    method: "GET",
+    headers: myHeaders,
+    redirect: "follow",
+  };
+
+  try {
+    const response = await fetch(
+      `${SERVER_URL}/api/auth/user/storage/info`,
+      requestOptions
+    );
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const DirectoryContent = async (authToken, path) => {
+  const myHeaders = new Headers();
+  myHeaders.append("Authorization", `Bearer ${authToken}`);
+  myHeaders.append("Content-Type", "application/json");
+  myHeaders.append("ngrok-skip-browser-warning", "790355");
+
+  const raw = JSON.stringify({
+    directory_path: path,
+  });
+
+  const requestOptions = {
+    method: "POST",
+    headers: myHeaders,
+    body: raw,
+    redirect: "follow",
+  };
+
+  try {
+    const response = await fetch(
+      `${SERVER_URL}/api/auth/user/get/directory`,
+      requestOptions
+    );
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const CreateFolder = async (authToken, path, folderName) => {
+  const myHeaders = new Headers();
+  myHeaders.append("Authorization", `Bearer ${authToken}`);
+  myHeaders.append("Content-Type", "application/json");
+  myHeaders.append("ngrok-skip-browser-warning", "790355");
+
+  const raw = JSON.stringify({
+    directory_name: folderName,
+    base_directory_path: path,
+  });
+
+  const requestOptions = {
+    method: "POST",
+    headers: myHeaders,
+    body: raw,
+    redirect: "follow",
+  };
+
+  try {
+    const response = await fetch(
+      `${SERVER_URL}/api/auth/user/create/directory`,
+      requestOptions
+    );
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const UploadFile = async (authToken, path, file) => {
+  const myHeaders = new Headers();
+  myHeaders.append("Authorization", `Bearer ${authToken}`);
+  myHeaders.append("ngrok-skip-browser-warning", "790355");
+
+  const formdata = new FormData();
+  formdata.append("directory_path", path);
+  formdata.append("file", file);
+
+  const requestOptions = {
+    method: "POST",
+    headers: myHeaders,
+    body: formdata,
+    redirect: "follow",
+  };
+
+  try {
+    const response = await fetch(
+      `${SERVER_URL}/api/auth/user/upload/file`,
+      requestOptions
+    );
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export { UserProfile, DirectoryInfo, DirectoryContent, CreateFolder, UploadFile };

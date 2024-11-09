@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
@@ -6,7 +6,7 @@ from pydantic import ValidationError, BaseModel, EmailStr, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from pymongo import MongoClient
 import random
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Union, Annotated
 import bcrypt
 from datetime import datetime, timedelta
 import os
@@ -20,6 +20,7 @@ import jwt
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from bson import ObjectId
 from fastapi import HTTPException
+from pathlib import Path
 
 load_dotenv()
 app = FastAPI()      # Create a FastAPI instance
@@ -301,28 +302,45 @@ async def get_user_profile(user: TokenData = Depends(get_current_active_user)):
         response = {
             "email": user_data["email"],
             "fullname": user_data["fullname"],
+            "username": user_data["username"],
             "user_directory": user_data["user_directory"]
         }
         return JSONResponse(status_code=200, content={"message": response, "status": "success"})
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": str(e), "status": "error"})
-    
+
+@app.get('/api/auth/user/storage/info')
+async def get_user_storage_info(user: TokenData = Depends(get_current_active_user)):
+    try:
+        user_data = db_connection.users_collection.find_one({"_id": ObjectId(user.username)})
+        if not user_data:
+            return JSONResponse(status_code=404, content={"message": "User not found", "status": "error"})
+        dir_count = fso.count_files_and_folders(f"{fso.root_directory}/{user_data['user_directory']['root']}")
+        response = {
+            "allocated_space": user_data["user_directory"]["allocated_space"],
+            "used_space": round(user_data["user_directory"]["used_space"], 2),
+            "count": {"files": dir_count[0], "folders": dir_count[1]}
+        }
+        return JSONResponse(status_code=200, content={"message": response, "status": "success"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": str(e), "status": "error"})
+
+
 class getDirectorySchema(BaseModel):
     directory_path: str
-@app.get("/api/auth/user/get/directory")
+@app.post("/api/auth/user/get/directory")
 async def get_directory(data: getDirectorySchema, user: TokenData = Depends(get_current_active_user)):
     try:
         user_data = db_connection.users_collection.find_one({"_id": ObjectId(user.username)})
         if not user_data:
-            return JSONResponse(status_code=404, content={"message": "User not found"})
-        if not os.path.exists(f"{fso.root_directory}/{data.directory_path}"):
-            return JSONResponse(status_code=404, content={"message": "Directory not found"})
-        directory_list = []
-        for entry in os.scandir(f"{fso.root_directory}/{data.directory_path}"):
-            directory_list.append({"name": entry.name, "is_file": entry.is_file(), "is_dir": entry.is_dir()})
-        return JSONResponse(status_code=200, content={"message": directory_list})
+            return JSONResponse(status_code=404, content={"message": "User not found", "status": "error"})
+        directory_list = fso.scan_directory(data.directory_path)
+        
+        return JSONResponse(status_code=200, content={"message": directory_list, "status": "success"})
     except Exception as e:
-        return JSONResponse(status_code=500, content={"message": str(e)})  
+        return JSONResponse(status_code=500, content={"message": str(e), "status": "error"})  
+
+
 
 class createDirectorySchema(BaseModel):
     directory_name: str
@@ -333,15 +351,38 @@ async def create_directory(data: createDirectorySchema, user: TokenData = Depend
     try:
         user_data = db_connection.users_collection.find_one({"_id": ObjectId(user.username)})
         if not user_data:
-            return JSONResponse(status_code=404, content={"message": "User not found"})
+            return JSONResponse(status_code=404, content={"message": "User not found", "status": "error"})
+        if os.path.exists(f"{fso.root_directory}/{data.base_directory_path}/{data.directory_name}"):
+            return JSONResponse(status_code=400, content={"message": "Directory already exists", "status": "error"})
         if not os.path.exists(f"{data.base_directory_path}/{data.directory_name}"):
             os.makedirs(f"{fso.root_directory}/{data.base_directory_path}/{data.directory_name}")
-            return JSONResponse(status_code=200, content={"message": "Directory created successfully"})
-        return JSONResponse(status_code=400, content={"message": "Directory already exists"})
+            return JSONResponse(status_code=200, content={"message": "Directory created successfully", "status": "success"})
+        
     except Exception as e:
-        return JSONResponse(status_code=500, content={"message": str(e)})
+        return JSONResponse(status_code=500, content={"message": str(e), "status": "error"})
 
 
+    
+@app.post("/api/auth/user/upload/file")
+async def upload_file(
+    directory_path: str = Form(...),
+    file: UploadFile = File(...),
+     user: TokenData = Depends(get_current_active_user)):
+    try:
+        user_data = db_connection.users_collection.find_one({"_id": ObjectId(user.username)})
+        if not user_data:
+            return JSONResponse(status_code=404, content={"message": "User not found", "status": "error"})
+        if not os.path.exists(f"{fso.root_directory}/{directory_path}"):
+            return JSONResponse(status_code=404, content={"message": "Directory not found", "status": "error"})
+        file_path = os.path.join(f"{fso.root_directory}/{directory_path}", file.filename)
+        with open(file_path, "wb") as buffer:
+            buffer.write(file.file.read())
+        folder_size = fso.get_directory_size(f"{fso.root_directory}/{user_data['user_directory']['root']}")/(1024*1024*1024)
+        user_data["user_directory"]["used_space"] = folder_size
+        db_connection.users_collection.update_one({"_id": user_data["_id"]}, {"$set": user_data})
+        return JSONResponse(status_code=200, content={"message": "File uploaded successfully", "status": "success"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": str(e), "status": "error"})
 
 
 

@@ -1,5 +1,7 @@
 from dotenv import load_dotenv
 import os
+from pathlib import Path
+from typing import List, Dict, Union
 
 load_dotenv()
 class FileServerOperations:
@@ -30,3 +32,59 @@ class FileServerOperations:
             # if for whatever reason we can't open the folder, return 0
             return 0
         return total
+    
+    def count_files_and_folders(self, directory):
+        total_files = 0
+        total_folders = 0
+        
+        for item in os.listdir(directory):
+            item_path = os.path.join(directory, item)
+            
+            if os.path.isfile(item_path):
+                total_files += 1
+            elif os.path.isdir(item_path):
+                total_folders += 1
+                
+                # Recursively count files and folders in subdirectories
+                sub_files, sub_folders = self.count_files_and_folders(item_path)
+                total_files += sub_files
+                total_folders += sub_folders
+        
+        return total_files, total_folders
+    
+    def scan_directory(self, directory_path: str, include_hidden: bool = False) -> List[Dict[str, Union[str, str]]]:
+        
+        results = []
+        
+        try:
+            directory = Path(f"{self.root_directory}/{directory_path}") 
+            # Check if directory exists
+            if not directory.exists():
+                raise FileNotFoundError(f"Directory not found: {directory_path}")
+        
+            for item in directory.iterdir():
+                # Skip hidden files/folders if not included
+                if not include_hidden and item.name.startswith('.'):
+                    continue
+                
+                item_info = {
+                    'name': item.name,
+                    'path': str(item.relative_to(self.root_directory)),
+                    'type': 'directory' if item.is_dir() else 'file'
+                }
+                
+                if item.is_file():
+                    item_info.update({
+                        'size': item.stat().st_size,
+                        'extension': item.suffix[1:] if item.suffix else ''
+                    })
+                
+                results.append(item_info)
+            
+            
+        except PermissionError:
+            raise PermissionError(f"Permission denied: Cannot access {directory_path}")
+        except Exception as e:
+            raise Exception(f"Error scanning directory: {str(e)}")
+        
+        return results
