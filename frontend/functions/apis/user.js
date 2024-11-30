@@ -141,8 +141,8 @@ const DownloadFile = async (authToken, path, filename) => {
   myHeaders.append("ngrok-skip-browser-warning", "790355");
 
   const formdata = new FormData();
-  formdata.append("directory_path", "aditya_coomar");
-  formdata.append("file_name", "UNITV COA.pdf");
+  formdata.append("directory_path", path);
+  formdata.append("file_name", filename);
 
   const requestOptions = {
     method: "POST",

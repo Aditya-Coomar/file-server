@@ -373,18 +373,32 @@ async def create_directory(data: createDirectorySchema, user: TokenData = Depend
 async def upload_file(
     directory_path: str = Form(...),
     file: UploadFile = File(...),
-     user: TokenData = Depends(get_current_active_user)):
+    user: TokenData = Depends(get_current_active_user)):
     try:
         user_data = db_connection.users_collection.find_one({"_id": ObjectId(user.username)})
         if not user_data:
             return JSONResponse(status_code=404, content={"message": "User not found", "status": "error"})
         if not os.path.exists(f"{fso.root_directory}/{directory_path}"):
             return JSONResponse(status_code=404, content={"message": "Directory not found", "status": "error"})
+        
+        # Construct file path
         file_path = os.path.join(f"{fso.root_directory}/{directory_path}", file.filename)
+        
+        # Calculate file size in MB
+        file_size_gb = len(await file.read()) / (1024*1024*1024)
+        await file.seek(0)  # Reset the file pointer to the beginning
+        
+        # Check if enough space is available
+        allocated_space_mb = user_data["user_directory"]["allocated_space"]
+        used_space_mb = user_data["user_directory"]["used_space"]
+        if (allocated_space_mb - used_space_mb) < file_size_gb:
+            return JSONResponse(status_code=400, content={"message": "No space left in the directory", "status": "error"})
+
+        # Write file to disk
         with open(file_path, "wb") as buffer:
-            if (user_data["user_directory"]["allocated_space"] - user_data["user_directory"]["used_space"]) < (file.file.read().__sizeof__()/(1024*1024*1024)):
-                return JSONResponse(status_code=400, content={"message": "No space left in the directory", "status": "error"})
-            buffer.write(file.file.read())
+            buffer.write(await file.read())
+            
+        
         folder_size = fso.get_directory_size(f"{fso.root_directory}/{user_data['user_directory']['root']}")/(1024*1024*1024)
         user_data["user_directory"]["used_space"] = folder_size
         db_connection.users_collection.update_one({"_id": user_data["_id"]}, {"$set": user_data})
