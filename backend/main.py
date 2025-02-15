@@ -155,6 +155,7 @@ class loginUserSchema(BaseModel):
 
 @app.post("/api/auth/login")
 async def login(user: loginUserSchema):
+    
     try:
         if not user.user:
             return JSONResponse(status_code=400, content={"message": "Email or Username is required", "status": "error"})
