@@ -65,6 +65,85 @@ node -v
 npm -v
 ```
 
+### Install MongoDB & MongoDB Compass
+
+#### MongoDB Installation
+
+##### Windows
+1. Download MongoDB Community Server from [MongoDB Official Website](https://www.mongodb.com/try/download/community).
+2. Run the installer (`.msi` file) and follow the setup instructions.
+3. Choose **Complete** setup.
+4. Ensure the option **'Install MongoDB as a service'** is checked.
+5. Complete the installation and verify using:
+   
+   ```sh
+   mongod --version
+   ```
+
+##### macOS (Using Homebrew)
+1. Open Terminal and run:
+   
+   ```sh
+   brew tap mongodb/brew
+   brew install mongodb-community@6.0
+   ```
+3. Start MongoDB service:
+
+   ```sh
+   brew services start mongodb-community@6.0
+   ```
+5. Verify installation:
+
+   ```sh
+   mongod --version
+   ```
+
+##### Linux (Ubuntu/Debian)
+1. Import the MongoDB public key:
+
+   ```sh
+   wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
+   ```
+3. Add the MongoDB repository:
+
+   ```sh
+   echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+   ```
+5. Update the package database:
+
+   ```sh
+   sudo apt update
+   ```
+7. Install MongoDB:
+
+   ```sh
+   sudo apt install -y mongodb-org
+   ```
+9. Start MongoDB:
+
+   ```sh
+   sudo systemctl start mongod
+   ```
+11. Enable MongoDB to start on boot:
+   
+   ```sh
+   sudo systemctl enable mongod
+   ```
+11. Verify installation:
+   
+   ```sh
+   mongod --version
+   ```
+
+#### MongoDB Compass Installation
+1. Download MongoDB Compass from [MongoDB Compass Official Website](https://www.mongodb.com/try/download/compass).
+2. Run the installer and follow the setup process.
+3. Open MongoDB Compass and connect using:
+
+   ```
+   mongodb://localhost:27017
+   ```
+
 ## Installation
 
 Clone the repository:
@@ -92,6 +171,22 @@ MAIL_SECRET='your_mail_secret'
 MAIL_PORT=your_mail_port
 MAIL_HOST='your_mail_host'
 ```
+
+Configure the Database Connection accordingly in `main.py` file:
+
+```sh
+100  class DatabaseConnection:
+101     def __init__(self):
+102         self.client = MongoClient("mongodb://localhost:27017/")
+103         self.db = self.client["file_server"]
+104         self.users_collection = self.db["users"]
+105         
+106         self.users_collection.create_index("email", unique=True)
+107         self.users_collection.create_index("username", unique=True)
+```
+
+
+
 
 Install dependencies and start the backend:
 
